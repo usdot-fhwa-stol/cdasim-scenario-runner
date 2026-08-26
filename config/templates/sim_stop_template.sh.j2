@@ -17,6 +17,10 @@ CURRENT_DIR=$(pwd)
 
 echo "Stopping scenario..."
 
+if docker container inspect "carla-server" >/dev/null 2>&1; then
+    docker rm -f "carla-server" 2>/dev/null || true
+fi
+
 {% for c in scenario %}
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
