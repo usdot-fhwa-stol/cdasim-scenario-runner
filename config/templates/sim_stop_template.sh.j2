@@ -13,36 +13,25 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-CURRENT_DIR=$(pwd)
-LOCK_FILE="/tmp/cdasim-scenario-runner-stop.lock"
 CLEANUP_FAILED=0
+DOCKER_SOCKET_PATH="/var/run/docker.sock"
 
-exec 9>"$LOCK_FILE"
-if ! flock 9; then
-    echo "Error: Could not acquire the scenario cleanup lock." >&2
+# Docker Compose evaluates the complete model during `down`. Export the host
+# socket group ID here as well as in the start script so the CDASim group_add
+# interpolation remains valid in this separate shell process.
+if [ ! -S "$DOCKER_SOCKET_PATH" ]; then
+    echo "Error: $DOCKER_SOCKET_PATH is not a Docker socket." >&2
     exit 1
 fi
+if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$DOCKER_SOCKET_PATH"); then
+    echo "Error: Could not determine the group ID of $DOCKER_SOCKET_PATH." >&2
+    exit 1
+fi
+export DOCKER_SOCKET_GID
 
-remove_compose_project_containers() {
-    local project_name="$1"
-    local remaining_containers
-
-    if ! remaining_containers=$(docker ps -aq \
-        --filter "label=com.docker.compose.project=$project_name"); then
-        echo "Error: Could not inspect remaining containers for $project_name." >&2
-        CLEANUP_FAILED=1
-        return
-    fi
-
-    if [ -n "$remaining_containers" ]; then
-        echo "Removing remaining containers for Compose project $project_name..."
-        if ! docker rm -f $remaining_containers; then
-            echo "Error: Could not remove all containers for $project_name." >&2
-            CLEANUP_FAILED=1
-        fi
-    fi
-}
-
+# Remove a container by its exact name when it exists. Missing containers are
+# treated as already cleaned up so this function is safe to call repeatedly.
+# Usage: remove_named_container CONTAINER_NAME
 remove_named_container() {
     local container_name="$1"
 
@@ -54,37 +43,34 @@ remove_named_container() {
     fi
 }
 
+# Remove a Docker network by name when it exists. Compose services and dynamic
+# runtime containers are removed first so the network should no longer be used.
+# Usage: remove_network NETWORK_NAME
 remove_network() {
     local network_name="$1"
-    local attempt
 
-    if ! docker network inspect "$network_name" >/dev/null 2>&1; then
-        return
-    fi
-
-    for attempt in 1 2 3; do
-        if docker network rm "$network_name"; then
-            return
+    if docker network inspect "$network_name" >/dev/null 2>&1; then
+        if ! docker network rm "$network_name"; then
+            echo "Error: Could not remove network $network_name." >&2
+            CLEANUP_FAILED=1
         fi
-        echo "Network $network_name is still in use; retrying ($attempt/3)..." >&2
-        sleep 1
-    done
-
-    echo "Error: Could not remove network $network_name." >&2
-    CLEANUP_FAILED=1
+    fi
 }
 
 echo "Stopping scenario..."
 
+# --remove-orphans handles containers from the same Compose project when a
+# service was renamed or removed, or when a different config-image/override
+# version changed the effective Compose model between scenario runs.
 {% for c in scenario %}
 if ! docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
                down --remove-orphans; then
-    echo "Warning: Compose cleanup failed for {{ c.PROJECT_NAME }}; checking for remaining containers." >&2
+    echo "Error: Compose cleanup failed for {{ c.PROJECT_NAME }}." >&2
+    CLEANUP_FAILED=1
 fi
-remove_compose_project_containers "{{ c.PROJECT_NAME }}"
 {% endfor %}
 
 # CARLA and NS-3 are launched by CDASim through the host Docker socket, so
@@ -100,10 +86,6 @@ remove_named_container "{{ config_container.name }}"
 {% for network in networks %}
 remove_network "{{ network.name }}"
 {% endfor %}
-
-if ! cd "$CURRENT_DIR"; then
-    CLEANUP_FAILED=1
-fi
 
 if [ "$CLEANUP_FAILED" -ne 0 ]; then
     echo "Scenario cleanup completed with errors." >&2

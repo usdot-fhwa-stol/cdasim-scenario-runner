@@ -13,21 +13,13 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-CURRENT_DIR=$(pwd)
+# Exit immediately when startup fails. ScenarioRunner owns the deployment
+# lifecycle and invokes the generated stop script from its finally block.
+set -e
 
-cleanup() {
-    local exit_code="$1"
-
-    trap - ERR INT TERM
-    echo "Cleaning up..."
-    bash "{{ temp_dir }}/sim_stop.sh" 2>/dev/null || true
-    cd "$CURRENT_DIR" || exit 1
-    exit "$exit_code"
-}
-trap 'cleanup 1' ERR
-trap 'cleanup 130' INT
-trap 'cleanup 143' TERM
-
+# Create a host directory if needed and make it writable by scenario
+# containers, using sudo only when the current user lacks permission.
+# Usage: prepare_host_directory "/absolute/host/path"
 prepare_host_directory() {
     local host_dir="$1"
 
@@ -47,6 +39,10 @@ prepare_host_directory() {
     fi
 }
 
+# Install the selected scenario map as vector_map.osm. An identical installed
+# map is left unchanged; a different one is moved to the next available
+# backup_NUMBER.osm before the selected map is copied.
+# Usage: stage_map_file SOURCE_FILE TARGET_FILE MAP_NAME TEST_CASE_LABEL
 stage_map_file() {
     local source_file="$1"
     local target_file="$2"
@@ -81,6 +77,9 @@ stage_map_file() {
     echo "Installed $map_name map as $target_file"
 }
 
+# Copy one vehicle route into the CARMA route directory when the target does
+# not already exist. Existing routes are intentionally left unchanged.
+# Usage: stage_route_file SOURCE_FILE TARGET_FILE ROUTE_NAME VEHICLE_NAME
 stage_route_file() {
     local source_file="$1"
     local target_file="$2"
@@ -100,6 +99,9 @@ stage_route_file() {
     echo "Installed $route_name route at $target_file"
 }
 
+# Validate the host Docker socket and export its group ID for Compose services
+# that use the socket to launch CARLA or NS-3 containers.
+# Usage: prepare_docker_socket
 prepare_docker_socket() {
     local socket_path="/var/run/docker.sock"
 
@@ -153,6 +155,9 @@ docker network create --driver {{ network.driver }}{% if network.subnet is defin
 docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_container.image }}" -c '{{ config_container.init_command }}'
 {% endfor %}
 
+# Recreate Compose containers so they attach to the networks created for this
+# run instead of reusing stale container metadata from a previous interrupted
+# run whose external networks may have been deleted and recreated.
 {% for c in scenario %}
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
@@ -162,4 +167,3 @@ docker compose \
 {% endfor %}
 
 echo "Scenario started."
-cd "$CURRENT_DIR" || exit 1
