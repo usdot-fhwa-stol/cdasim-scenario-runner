@@ -23,6 +23,15 @@ cleanup() {
 }
 trap cleanup ERR
 
+echo "Pulling scenario runtime images..."
+{% for c in scenario %}
+docker compose \
+{% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
+{% endfor %}               --env-file "{{ c.env_file }}" \
+               -p "{{ c.PROJECT_NAME }}" \
+               pull
+{% endfor %}
+
 {% for network in networks %}
 docker network create --driver {{ network.driver }}{% if network.subnet is defined %} --subnet {{ network.subnet }}{% endif %} {{ network.name }} 2>/dev/null || true
 {% endfor %}
