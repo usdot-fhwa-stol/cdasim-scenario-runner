@@ -73,3 +73,5 @@ networks:
   carma_sim_net:
     external: true
     name: "${SIM_NETWORK_NAME:-carma-sim-net}"
+volumes:
+  pyeos_data:
