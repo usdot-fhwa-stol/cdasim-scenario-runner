@@ -23,23 +23,29 @@ cleanup() {
 }
 trap cleanup ERR
 
-CDASIM_TMP_DIR="/opt/carma-simulation/tmp"
-if ! mkdir -p "$CDASIM_TMP_DIR"; then
-    echo "Error: Could not create $CDASIM_TMP_DIR." >&2
-    exit 1
-fi
-if ! chmod -R a+rwX "$CDASIM_TMP_DIR" 2>/dev/null; then
-    echo "Requesting elevated permission to make $CDASIM_TMP_DIR writable..."
-    if ! sudo chmod -R a+rwX "$CDASIM_TMP_DIR"; then
-        echo "Error: Could not update permissions for $CDASIM_TMP_DIR." >&2
+prepare_host_directory() {
+    local host_dir="$1"
+
+    if ! mkdir -p "$host_dir"; then
+        echo "Error: Could not create $host_dir." >&2
         exit 1
     fi
-fi
-if [ ! -w "$CDASIM_TMP_DIR" ]; then
-    echo "Error: $CDASIM_TMP_DIR is not writable." >&2
-    echo "Correct its ownership or permissions before starting the scenario." >&2
-    exit 1
-fi
+    if ! chmod -R a+rwX "$host_dir" 2>/dev/null; then
+        echo "Requesting elevated permission to make $host_dir writable..."
+        if ! sudo chmod -R a+rwX "$host_dir"; then
+            echo "Error: Could not update permissions for $host_dir." >&2
+            exit 1
+        fi
+    fi
+    if [ ! -w "$host_dir" ]; then
+        echo "Error: $host_dir is not writable." >&2
+        echo "Correct its ownership or permissions before starting the scenario." >&2
+        exit 1
+    fi
+}
+
+prepare_host_directory "/opt/carma-simulation/tmp"
+prepare_host_directory "/opt/carma-simulation/logs"
 
 echo "Pulling scenario runtime images..."
 {% for c in scenario %}
