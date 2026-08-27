@@ -39,8 +39,23 @@ prepare_host_directory() {
     fi
 }
 
+prepare_docker_socket() {
+    local socket_path="/var/run/docker.sock"
+
+    if [ ! -S "$socket_path" ]; then
+        echo "Error: $socket_path is not a Docker socket." >&2
+        exit 1
+    fi
+    if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$socket_path"); then
+        echo "Error: Could not determine the group ID of $socket_path." >&2
+        exit 1
+    fi
+    export DOCKER_SOCKET_GID
+}
+
 prepare_host_directory "/opt/carma-simulation/tmp"
 prepare_host_directory "/opt/carma-simulation/logs"
+prepare_docker_socket
 
 echo "Pulling scenario runtime images..."
 {% for c in scenario %}
