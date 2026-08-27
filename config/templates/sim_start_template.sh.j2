@@ -37,11 +37,6 @@ prepare_host_directory() {
             exit 1
         fi
     fi
-    if [ ! -w "$host_dir" ]; then
-        echo "Error: $host_dir is not writable." >&2
-        echo "Correct its ownership or permissions before starting the scenario." >&2
-        exit 1
-    fi
 }
 
 prepare_host_directory "/opt/carma-simulation/tmp"
