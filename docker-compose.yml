@@ -1,0 +1,75 @@
+services:
+  cdasim:
+    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/cdasim:${CDASIM-VERSION:-develop}"
+    container_name: cdasim
+    privileged: true
+    networks:
+      - carma_sim_net
+    environment:
+      DISPLAY: "${DISPLAY}"
+      QT_X11_NO_MITSHM: "1"
+      NVIDIA_VISIBLE_DEVICES: all
+      NVIDIA_DRIVER_CAPABILITIES: graphics,utility,compute
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /dev:/dev
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - "${CDASIM_LOG_ROOT}:/opt/carma-simulation/logs"
+    group_add:
+      - "998"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+    command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO}"
+
+  carla-sensor-lib:
+    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/carla-sensor-lib:${CARLA_SENSOR_LIB_VERSION:-develop}"
+    container_name: carla-sensor-lib
+    restart: always
+    networks:
+      - carma_sim_net
+    volumes:
+      - "${CDASIM_LOG_ROOT}/carla-sensor-lib:/home/CarlaCDASimAdapter/logs"
+    command: >-
+      bash -c "sleep 8;
+      python3 -u /home/CarlaCDASimAdapter/src/CarlaCDASimAdapter.py
+      --carla-host carla-server
+      --xmlrpc-server-host 0.0.0.0
+      --xmlrpc-server-port 8091"
+
+  xml-rpc-server:
+    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/xml-rpc-server:${XML_RPC_SERVER_VERSION:-develop}"
+    container_name: xml-rpc-server
+    networks:
+      - carma_sim_net
+    command:
+      - python3.10
+      - /home/carma/src/carla_v0.10_xmlrpc_server.py
+      - --debug
+      - --carla-host=carla-server
+      - "--host=0.0.0.0"
+  econolite-virtual-controller:
+    image: usdotfhwastol/econolite-virtual-controller:latest
+    container_name: evc
+    restart: always
+    networks:
+      carma_sim_net:
+    environment:
+      - DISPLAY=${DISPLAY}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix
+      - ./evc_sumo/:/home/carma/src/resources/
+      - ./PyEOS/:/home/carma/PyEOS
+      - pyeos_data:/home/carma/shared_data
+    depends_on:
+      - cdasim
+    command: >
+      bash -c "/home/carma/docker/start-evc.sh --traci-ip cdasim"
+
+
+networks:
+  carma_sim_net:
+    external: true
+    name: "${SIM_NETWORK_NAME}"
