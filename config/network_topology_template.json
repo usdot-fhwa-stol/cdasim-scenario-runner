@@ -40,12 +40,12 @@
         }
       ]
     },
-    "xml_rpc_server": {
+    "xml-rpc-server": {
       "interfaces": [
         {
           "network": "simulation",
           "env": "XML_RPC_SERVER_SIM_HOST",
-          "host": "xml_rpc_server"
+          "host": "xml-rpc-server"
         }
       ]
     }
