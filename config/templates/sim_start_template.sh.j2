@@ -15,6 +15,9 @@
 
 CURRENT_DIR=$(pwd)
 
+# Stop any partially started scenario, restore the caller's working directory,
+# and return a failure status when a command in this script fails.
+# Usage: registered with `trap cleanup ERR`; do not call during normal startup.
 cleanup() {
     echo "Cleaning up..."
     bash "{{ temp_dir }}/sim_stop.sh" 2>/dev/null || true
@@ -23,6 +26,10 @@ cleanup() {
 }
 trap cleanup ERR
 
+# Create a host directory when it does not exist and make it writable by the
+# scenario containers. The function uses the current user's permissions first
+# and falls back to sudo for the permission update when required.
+# Usage: prepare_host_directory "/absolute/host/path"
 prepare_host_directory() {
     local host_dir="$1"
 
@@ -39,6 +46,9 @@ prepare_host_directory() {
     fi
 }
 
+# Validate the host Docker socket and export its group ID for Compose services
+# that access the host Docker daemon to launch CARLA or NS-3 containers.
+# Usage: prepare_docker_socket
 prepare_docker_socket() {
     local socket_path="/var/run/docker.sock"
 
