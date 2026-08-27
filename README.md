@@ -168,7 +168,7 @@ project_root/
 │   ├── maps/
 │   │   └── Town10.osm
 │   ├── routes/
-│   │   └── Town10_loop_official.csv
+│   │   └── Town10_event_route_1.csv
 │   ├── network_topology_template.json
 │   ├── templates/
 │   │   ├── sim_start_template.sh.j2
