@@ -55,6 +55,8 @@ prepare_docker_socket() {
 
 prepare_host_directory "/opt/carma-simulation/tmp"
 prepare_host_directory "/opt/carma-simulation/logs"
+
+#  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
 prepare_docker_socket
 
 echo "Pulling scenario runtime images..."
