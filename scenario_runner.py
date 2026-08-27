@@ -60,7 +60,25 @@ class ScenarioRunner:
 
     @staticmethod
     def _configured_file(directory: Path, name: str, suffix: str) -> Path:
-        """Resolve a configured map or route without leaving its config directory."""
+        """Resolve a configured map or route inside an allowed directory.
+
+        Args:
+            directory: Directory that must contain the configured file.
+            name: Configured file name, with or without the expected suffix.
+            suffix: Expected extension including its leading period, such as
+                ``.osm`` or ``.csv``.
+
+        Returns:
+            The absolute, resolved file path. The file is not required to exist;
+            callers that require it must check the returned path.
+
+        Raises:
+            ValueError: If the resolved path escapes ``directory``.
+
+        Example:
+            ``ScenarioRunner._configured_file(MAP_DIRECTORY, "Town10", ".osm")``
+            resolves to ``<MAP_DIRECTORY>/Town10.osm``.
+        """
 
         filename = name if name.endswith(suffix) else f"{name}{suffix}"
         source = (directory / filename).resolve()
@@ -71,7 +89,30 @@ class ScenarioRunner:
         return source
 
     def _scenario_resources(self, case: dict, label: str) -> dict:
-        """Validate and describe the map and vehicle routes used by a test case."""
+        """Validate and describe the map and routes required by one test case.
+
+        Args:
+            case: Test-case mapping from ``parameters.yaml``. It must contain a
+                ``MAP`` value and may contain vehicle ``SELECTED_ROUTE`` values
+                under ``env_settings.vehicles[*].settings``.
+            label: Test-case label used to identify configuration errors.
+
+        Returns:
+            A mapping containing one ``map_file`` staging description and a
+            deduplicated list of vehicle ``routes`` staging descriptions. Each
+            description contains source and destination paths plus identifying
+            information used by the generated start script.
+
+        Raises:
+            ValueError: If ``MAP`` is missing or a configured name resolves
+                outside its allowed configuration directory.
+            FileNotFoundError: If the configured map or vehicle route does not
+                exist under ``config/maps`` or ``config/routes``.
+
+        Example:
+            ``resources = runner._scenario_resources(case, case["label"])``
+            prepares the data passed to ``ScenarioGenerator``.
+        """
 
         map_name = case.get("MAP")
         if not map_name:
@@ -130,7 +171,24 @@ class ScenarioRunner:
 
     @staticmethod
     def _normalize_vehicle_runtime_settings(case: dict) -> None:
-        """Normalize vehicle values whose ROS 2 parameters require floats."""
+        """Normalize float-valued ROS 2 settings for every configured vehicle.
+
+        Args:
+            case: Mutable test-case mapping. For each vehicle that defines
+                ``START_DELAY_IN_SECONDS``, this function replaces an integer,
+                float, or numeric string with a finite ``float`` value.
+
+        Returns:
+            None. The supplied ``case`` is updated in place.
+
+        Raises:
+            ValueError: If ``START_DELAY_IN_SECONDS`` is a boolean, cannot be
+                converted to a number, or converts to a non-finite value.
+
+        Example:
+            Calling ``ScenarioRunner._normalize_vehicle_runtime_settings(case)``
+            converts ``START_DELAY_IN_SECONDS: 30`` to ``30.0``.
+        """
 
         vehicles = case.get("env_settings", {}).get("vehicles", [])
         for vehicle in vehicles:
@@ -161,7 +219,29 @@ class ScenarioRunner:
                 )
             settings["START_DELAY_IN_SECONDS"] = normalized_value
 
-    def _run_one(self, idx: int, case: dict):
+    def _run_one(self, idx: int, case: dict) -> None:
+        """Generate, execute, stop, and collect data for one test case.
+
+        Args:
+            idx: One-based scenario number used for display and data collection.
+            case: Test-case mapping loaded from ``parameters.yaml``.
+
+        Returns:
+            None. Runtime artifacts and collected data are written to their
+            configured locations.
+
+        Raises:
+            FileNotFoundError: If a required map, route, Compose file, or config
+                image resource cannot be found.
+            ValueError: If the test-case configuration is invalid.
+            subprocess.CalledProcessError: If the generated start script fails.
+            KeyboardInterrupt: If the user interrupts execution with Ctrl+C;
+                the stop script still runs from the ``finally`` block.
+
+        Example:
+            ``runner._run_one(1, runner.test_cases[0])`` executes the first
+            loaded case. Normal callers should use ``runner.run()`` instead.
+        """
         label = case.get("label", f"scenario_{idx}")
         scenario_resources = self._scenario_resources(case, label)
         case = apply_scenario_topology(case)

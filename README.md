@@ -50,6 +50,7 @@ between Compose projects. Its top-level sections are:
 1. **Load Configurations**
    - `ScenarioRunner` reads `parameters.yaml` and loads all defined test cases.
    - Each test case includes runtime duration, environment settings, and output configuration.
+   - The map named by `MAP` and every vehicle route named by `SELECTED_ROUTE` are validated against `config/maps` and `config/routes` before scripts are generated.
 
 2. **Generate Scenario Environment**
    - `ScenarioTopologyAllocator` loads `network_topology_template.json` and adds internal networks, Docker service hostnames, and only the instance-specific DNS aliases required to distinguish repeated endpoints. These values are not configured in `parameters.yaml`.
@@ -61,6 +62,7 @@ between Compose projects. Its top-level sections are:
      - Two shell scripts: `sim_start.sh` and `sim_stop.sh`
 
 3. **Run Simulation**
+   - The generated start script installs the selected map as `/opt/carma/maps/vector_map.osm` and copies missing vehicle routes into `/opt/carma/routes` before starting containers. A different existing vector map is preserved as the next available `backup_{number}.osm`; existing route files are left unchanged.
    - The system executes `bash sim_start.sh` to bring up all simulation containers and networks.
    - Containers run concurrently for the duration defined by `runtime_seconds`.
    - Once the time elapses, or if a timeout occurs, `bash sim_stop.sh` is executed to gracefully stop the environment.
@@ -84,6 +86,7 @@ configure those entries:
 
 | Field | Description |
 |--------|--------------|
+| **`MAP`** | Test-case field naming an `.osm` file in `config/maps`, without requiring the extension. For example, `MAP: Town10` selects `config/maps/Town10.osm`. |
 | **`PROJECT_NAME`** | A unique Docker Compose project name for this deployment entry. |
 | **`COMPONENT`** | Vehicle entries only: selects the `platform` or `messenger` instance topology template. The default is `platform`. Do not set this field on Street entries. |
 | **`RUNTIME_IMAGE_ORG`** | The Docker organization or namespace that owns the runtime images (e.g., `usdotfhwastol`). |
@@ -91,6 +94,10 @@ configure those entries:
 | **`CONFIG_IMAGE_FULL`** | The full image name (including tag) of the configuration image containing the deployment's embedded `docker-compose.yml`. |
 | **`COMPOSE_FILE`** | A repository-local base Compose file used instead of `CONFIG_IMAGE_FULL`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
+
+`START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
+string. Scenario Runner normalizes it to a floating-point value because the
+CARMA-CARLA ROS 2 node declares `start_delay_in_seconds` as a double parameter.
 
 ### How these image fields interact
 
@@ -134,6 +141,9 @@ python3 scenario_runner.py --generate-only
 This generates the environment files, runtime Compose overrides, and matching
 `sim_start.sh` and `sim_stop.sh` files. It does not execute either script, wait
 for `runtime_seconds`, collect runtime data, or remove `tmp/` afterward.
+Scenario Runner is responsible for automatic cleanup. If `sim_start.sh` is run
+directly, run the matching `sim_stop.sh` manually when the scenario ends or
+startup is interrupted.
 
 ### Output example
 ```
@@ -155,6 +165,10 @@ Scenario 1 complete.
 ```
 project_root/
 ├── config/
+│   ├── maps/
+│   │   └── Town10.osm
+│   ├── routes/
+│   │   └── Town10_loop_official.csv
 │   ├── network_topology_template.json
 │   ├── templates/
 │   │   ├── sim_start_template.sh.j2
