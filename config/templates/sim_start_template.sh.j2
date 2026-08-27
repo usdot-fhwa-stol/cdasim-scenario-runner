@@ -16,19 +16,27 @@
 CURRENT_DIR=$(pwd)
 
 cleanup() {
+    local exit_code="$1"
+
+    trap - ERR INT TERM
     echo "Cleaning up..."
     bash "{{ temp_dir }}/sim_stop.sh" 2>/dev/null || true
     cd "$CURRENT_DIR" || exit 1
-    exit 1
+    exit "$exit_code"
 }
-trap cleanup ERR
+trap 'cleanup 1' ERR
+trap 'cleanup 130' INT
+trap 'cleanup 143' TERM
 
 prepare_host_directory() {
     local host_dir="$1"
 
-    if ! mkdir -p "$host_dir"; then
-        echo "Error: Could not create $host_dir." >&2
-        exit 1
+    if ! mkdir -p "$host_dir" 2>/dev/null; then
+        echo "Requesting elevated permission to create $host_dir..."
+        if ! sudo mkdir -p "$host_dir"; then
+            echo "Error: Could not create $host_dir." >&2
+            exit 1
+        fi
     fi
     if ! chmod -R a+rwX "$host_dir" 2>/dev/null; then
         echo "Requesting elevated permission to make $host_dir writable..."
@@ -37,6 +45,59 @@ prepare_host_directory() {
             exit 1
         fi
     fi
+}
+
+stage_map_file() {
+    local source_file="$1"
+    local target_file="$2"
+    local map_name="$3"
+    local test_case="$4"
+    local backup_index=1
+    local backup_file
+
+    if [ ! -f "$source_file" ]; then
+        echo "Error: $map_name map specified in parameters.yaml for test case $test_case cannot be found at $source_file" >&2
+        exit 1
+    fi
+
+    if [ -f "$target_file" ]; then
+        if cmp -s "$source_file" "$target_file"; then
+            echo "Map already matches $target_file; skipping copy."
+            return
+        fi
+
+        while :; do
+            backup_file="$(dirname "$target_file")/backup_${backup_index}.osm"
+            if [ ! -e "$backup_file" ]; then
+                break
+            fi
+            backup_index=$((backup_index + 1))
+        done
+        mv "$target_file" "$backup_file"
+        echo "Backed up existing map to $backup_file"
+    fi
+
+    cp "$source_file" "$target_file"
+    echo "Installed $map_name map as $target_file"
+}
+
+stage_route_file() {
+    local source_file="$1"
+    local target_file="$2"
+    local route_name="$3"
+    local vehicle_name="$4"
+
+    if [ ! -f "$source_file" ]; then
+        echo "Error: $route_name route specified in parameters.yaml for vehicle $vehicle_name cannot be found at $source_file" >&2
+        exit 1
+    fi
+    if [ -e "$target_file" ]; then
+        echo "Route already exists at $target_file; skipping copy."
+        return
+    fi
+
+    cp "$source_file" "$target_file"
+    echo "Installed $route_name route at $target_file"
 }
 
 prepare_docker_socket() {
@@ -55,6 +116,22 @@ prepare_docker_socket() {
 
 prepare_host_directory "/opt/carma-simulation/tmp"
 prepare_host_directory "/opt/carma-simulation/logs"
+prepare_host_directory "/opt/carma/logs"
+prepare_host_directory "/opt/carma/maps"
+prepare_host_directory "/opt/carma/routes"
+
+stage_map_file \
+    {{ shell_quote(scenario_resources.map_file.source) }} \
+    {{ shell_quote(scenario_resources.map_file.target) }} \
+    {{ shell_quote(scenario_resources.map_file.name) }} \
+    {{ shell_quote(scenario_resources.map_file.test_case) }}
+{% for route in scenario_resources.routes %}
+stage_route_file \
+    {{ shell_quote(route.source) }} \
+    {{ shell_quote(route.target) }} \
+    {{ shell_quote(route.name) }} \
+    {{ shell_quote(route.vehicle) }}
+{% endfor %}
 
 #  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
 prepare_docker_socket
@@ -81,7 +158,7 @@ docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               up -d
+               up -d --force-recreate
 {% endfor %}
 
 echo "Scenario started."

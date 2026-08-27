@@ -15,6 +15,7 @@
 import yaml
 import os
 import re
+import shlex
 import subprocess
 from jinja2 import Template
 from pathlib import Path
@@ -589,6 +590,7 @@ class ScenarioGenerator:
             'scenario': scenario,
             'networks': es.get('runner_networks', []),
             'config_containers': list(self._config_containers.values()),
+            'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
 
@@ -598,7 +600,7 @@ class ScenarioGenerator:
     def generate_start_script(self) -> str:
         with open(self.start_template, 'r') as f:
             tmpl = Template(f.read())
-        content = tmpl.render(**self.data)
+        content = tmpl.render(shell_quote=shlex.quote, **self.data)
 
         start_path = self.tmp_dir / "sim_start.sh"
         start_path.write_text(content)
