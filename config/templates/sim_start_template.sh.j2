@@ -17,8 +17,9 @@
 # lifecycle and invokes the generated stop script from its finally block.
 set -e
 
-# Create a host directory if needed and make it writable by scenario
-# containers, using sudo only when the current user lacks permission.
+# Create a host directory if needed and make its top-level directory writable.
+# Existing contents are not changed because logs from containers may be owned
+# by different users and do not need to be rewritten before each scenario.
 # Usage: prepare_host_directory "/absolute/host/path"
 prepare_host_directory() {
     local host_dir="$1"
@@ -30,9 +31,13 @@ prepare_host_directory() {
             exit 1
         fi
     fi
-    if ! chmod -R a+rwX "$host_dir" 2>/dev/null; then
+    if [ -w "$host_dir" ]; then
+        return
+    fi
+
+    if ! chmod a+rwx "$host_dir" 2>/dev/null; then
         echo "Requesting elevated permission to make $host_dir writable..."
-        if ! sudo chmod -R a+rwX "$host_dir"; then
+        if ! sudo chmod a+rwx "$host_dir"; then
             echo "Error: Could not update permissions for $host_dir." >&2
             exit 1
         fi
@@ -144,7 +149,7 @@ docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               pull
+               pull --policy missing
 {% endfor %}
 
 {% for network in networks %}
