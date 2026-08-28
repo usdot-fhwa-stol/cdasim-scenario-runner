@@ -15,6 +15,9 @@
 
 CURRENT_DIR=$(pwd)
 
+# Stop any partially started scenario, restore the caller's working directory,
+# and return a failure status when a command in this script fails.
+# Usage: registered with `trap cleanup ERR`; do not call during normal startup.
 cleanup() {
     echo "Cleaning up..."
     bash "{{ temp_dir }}/sim_stop.sh" 2>/dev/null || true
@@ -22,6 +25,49 @@ cleanup() {
     exit 1
 }
 trap cleanup ERR
+
+# Create a host directory when it does not exist and make it writable by the
+# scenario containers. The function uses the current user's permissions first
+# and falls back to sudo for the permission update when required.
+# Usage: prepare_host_directory "/absolute/host/path"
+prepare_host_directory() {
+    local host_dir="$1"
+
+    if ! mkdir -p "$host_dir"; then
+        echo "Error: Could not create $host_dir." >&2
+        exit 1
+    fi
+    if ! chmod -R a+rwX "$host_dir" 2>/dev/null; then
+        echo "Requesting elevated permission to make $host_dir writable..."
+        if ! sudo chmod -R a+rwX "$host_dir"; then
+            echo "Error: Could not update permissions for $host_dir." >&2
+            exit 1
+        fi
+    fi
+}
+
+# Validate the host Docker socket and export its group ID for Compose services
+# that access the host Docker daemon to launch CARLA or NS-3 containers.
+# Usage: prepare_docker_socket
+prepare_docker_socket() {
+    local socket_path="/var/run/docker.sock"
+
+    if [ ! -S "$socket_path" ]; then
+        echo "Error: $socket_path is not a Docker socket." >&2
+        exit 1
+    fi
+    if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$socket_path"); then
+        echo "Error: Could not determine the group ID of $socket_path." >&2
+        exit 1
+    fi
+    export DOCKER_SOCKET_GID
+}
+
+prepare_host_directory "/opt/carma-simulation/tmp"
+prepare_host_directory "/opt/carma-simulation/logs"
+
+#  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
+prepare_docker_socket
 
 echo "Pulling scenario runtime images..."
 {% for c in scenario %}
