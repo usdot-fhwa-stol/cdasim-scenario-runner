@@ -15,6 +15,8 @@
 
 CLEANUP_FAILED=0
 DOCKER_SOCKET_PATH="/var/run/docker.sock"
+RUNTIME_STOP_TIMEOUT_SECONDS=30
+CARLA_GPU_TEARDOWN_SECONDS=5
 
 # Docker Compose evaluates the complete model during `down`. Export the host
 # socket group ID here as well as in the start script so the CDASim group_add
@@ -29,14 +31,40 @@ if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$DOCKER_SOCKET_PATH"); then
 fi
 export DOCKER_SOCKET_GID
 
-# Remove a container by its exact name when it exists. Missing containers are
-# treated as already cleaned up so this function is safe to call repeatedly.
+# Stop a runtime container and remove it by its exact name. Docker sends
+# SIGTERM first and uses SIGKILL only if the timeout expires. Containers
+# launched with --rm may disappear automatically after they exit.
+# Usage: stop_and_remove_runtime_container CONTAINER_NAME
+stop_and_remove_runtime_container() {
+    local container_name="$1"
+
+    if ! docker container inspect "$container_name" >/dev/null 2>&1; then
+        return
+    fi
+
+    echo "Stopping runtime container $container_name gracefully..."
+    if ! docker stop --timeout "$RUNTIME_STOP_TIMEOUT_SECONDS" "$container_name"; then
+        echo "Warning: Graceful stop failed for $container_name; forcing removal." >&2
+        if ! docker rm -f "$container_name"; then
+            echo "Error: Could not remove container $container_name." >&2
+            CLEANUP_FAILED=1
+        fi
+        return
+    fi
+
+    # Runtime containers normally use --rm. If one remains after stopping,
+    # remove it on a best-effort basis; Docker may already be removing it.
+    docker rm "$container_name" >/dev/null 2>&1 || true
+}
+
+# Remove an already-stopped container by its exact name when it exists. Missing
+# containers are treated as already cleaned up, making repeated cleanup safe.
 # Usage: remove_named_container CONTAINER_NAME
 remove_named_container() {
     local container_name="$1"
 
     if docker container inspect "$container_name" >/dev/null 2>&1; then
-        if ! docker rm -f "$container_name"; then
+        if ! docker rm "$container_name"; then
             echo "Error: Could not remove container $container_name." >&2
             CLEANUP_FAILED=1
         fi
@@ -73,11 +101,16 @@ if ! docker compose \
 fi
 {% endfor %}
 
-# CARLA and NS-3 are launched by CDASim through the host Docker socket, so
-# they are not members of a Compose project and must be removed separately.
-for runtime_container in "carla-server" "ns3-federate"; do
-    remove_named_container "$runtime_container"
-done
+# CARLA and NS-3 are launched by CDASim through the host Docker socket, so they
+# are not members of a Compose project and must be stopped separately. Give
+# CARLA's GPU resources a short teardown interval before another scenario can
+# launch a new CARLA process.
+if docker container inspect "carla-server" >/dev/null 2>&1; then
+    stop_and_remove_runtime_container "carla-server"
+    echo "Waiting ${CARLA_GPU_TEARDOWN_SECONDS}s for CARLA GPU teardown..."
+    sleep "$CARLA_GPU_TEARDOWN_SECONDS"
+fi
+stop_and_remove_runtime_container "ns3-federate"
 
 {% for config_container in config_containers %}
 remove_named_container "{{ config_container.name }}"
