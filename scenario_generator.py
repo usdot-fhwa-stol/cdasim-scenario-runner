@@ -41,6 +41,8 @@ class ScenarioGenerator:
         "platform": "platform_ros1",
         "msger_roscore": "messenger_roscore",
         "msger_ros1_bridge": "messenger_ros1_bridge",
+        "v2x_ros_driver": "v2x-ros-driver",
+        "messenger_v2x_ros_driver": "messenger-v2x-ros-driver",
     }
 
     def __init__(
@@ -448,7 +450,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "messenger_v2x_ros_driver": {
+                        "messenger-v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
@@ -490,7 +492,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "v2x_ros_driver": {
+                        "v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
