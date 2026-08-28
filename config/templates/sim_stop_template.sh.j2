@@ -42,9 +42,9 @@ stop_and_remove_runtime_container() {
         return
     fi
 
-    echo "Stopping runtime container $container_name gracefully..."
+    echo "Stopping runtime container $container_name"
     if ! docker stop --timeout "$RUNTIME_STOP_TIMEOUT_SECONDS" "$container_name"; then
-        echo "Warning: Graceful stop failed for $container_name; forcing removal." >&2
+        echo "Warning: Stop failed for $container_name; forcing removal." >&2
         if ! docker rm -f "$container_name"; then
             echo "Error: Could not remove container $container_name." >&2
             CLEANUP_FAILED=1
