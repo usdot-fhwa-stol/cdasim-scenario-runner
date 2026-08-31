@@ -13,29 +13,116 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-CURRENT_DIR=$(pwd)
+CLEANUP_FAILED=0
+DOCKER_SOCKET_PATH="/var/run/docker.sock"
+RUNTIME_STOP_TIMEOUT_SECONDS=30
+CARLA_GPU_TEARDOWN_SECONDS=5
+
+# Docker Compose evaluates the complete model during `down`. Export the host
+# socket group ID here as well as in the start script so the CDASim group_add
+# interpolation remains valid in this separate shell process.
+if [ ! -S "$DOCKER_SOCKET_PATH" ]; then
+    echo "Error: $DOCKER_SOCKET_PATH is not a Docker socket." >&2
+    exit 1
+fi
+if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$DOCKER_SOCKET_PATH"); then
+    echo "Error: Could not determine the group ID of $DOCKER_SOCKET_PATH." >&2
+    exit 1
+fi
+export DOCKER_SOCKET_GID
+
+# Stop a runtime container and remove it by its exact name. Docker sends
+# SIGTERM first and uses SIGKILL only if the timeout expires. Containers
+# launched with --rm may disappear automatically after they exit.
+# Usage: stop_and_remove_runtime_container CONTAINER_NAME
+stop_and_remove_runtime_container() {
+    local container_name="$1"
+
+    if ! docker container inspect "$container_name" >/dev/null 2>&1; then
+        return
+    fi
+
+    echo "Stopping runtime container $container_name"
+    if ! docker stop --timeout "$RUNTIME_STOP_TIMEOUT_SECONDS" "$container_name"; then
+        echo "Warning: Stop failed for $container_name; forcing removal." >&2
+        if ! docker rm -f "$container_name"; then
+            echo "Error: Could not remove container $container_name." >&2
+            CLEANUP_FAILED=1
+        fi
+        return
+    fi
+
+    # Runtime containers normally use --rm. If one remains after stopping,
+    # remove it on a best-effort basis; Docker may already be removing it.
+    docker rm "$container_name" >/dev/null 2>&1 || true
+}
+
+# Remove an already-stopped container by its exact name when it exists. Missing
+# containers are treated as already cleaned up, making repeated cleanup safe.
+# Usage: remove_named_container CONTAINER_NAME
+remove_named_container() {
+    local container_name="$1"
+
+    if docker container inspect "$container_name" >/dev/null 2>&1; then
+        if ! docker rm "$container_name"; then
+            echo "Error: Could not remove container $container_name." >&2
+            CLEANUP_FAILED=1
+        fi
+    fi
+}
+
+# Remove a Docker network by name when it exists. Compose services and dynamic
+# runtime containers are removed first so the network should no longer be used.
+# Usage: remove_network NETWORK_NAME
+remove_network() {
+    local network_name="$1"
+
+    if docker network inspect "$network_name" >/dev/null 2>&1; then
+        if ! docker network rm "$network_name"; then
+            echo "Error: Could not remove network $network_name." >&2
+            CLEANUP_FAILED=1
+        fi
+    fi
+}
 
 echo "Stopping scenario..."
 
-if docker container inspect "carla-server" >/dev/null 2>&1; then
-    docker rm -f "carla-server" 2>/dev/null || true
-fi
-
+# --remove-orphans handles containers from the same Compose project when a
+# service was renamed or removed, or when a different config-image/override
+# version changed the effective Compose model between scenario runs.
 {% for c in scenario %}
-docker compose \
+if ! docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               down 2>/dev/null || true
+               down --remove-orphans; then
+    echo "Error: Compose cleanup failed for {{ c.PROJECT_NAME }}." >&2
+    CLEANUP_FAILED=1
+fi
 {% endfor %}
 
+# CARLA and NS-3 are launched by CDASim through the host Docker socket, so they
+# are not members of a Compose project and must be stopped separately. Give
+# CARLA's GPU resources a short teardown interval before another scenario can
+# launch a new CARLA process.
+if docker container inspect "carla-server" >/dev/null 2>&1; then
+    stop_and_remove_runtime_container "carla-server"
+    echo "Waiting ${CARLA_GPU_TEARDOWN_SECONDS}s for CARLA GPU teardown..."
+    sleep "$CARLA_GPU_TEARDOWN_SECONDS"
+fi
+stop_and_remove_runtime_container "ns3-federate"
+
 {% for config_container in config_containers %}
-docker rm -f "{{ config_container.name }}" 2>/dev/null || true
+remove_named_container "{{ config_container.name }}"
 {% endfor %}
 
 {% for network in networks %}
-docker network rm "{{ network.name }}" 2>/dev/null || true
+remove_network "{{ network.name }}"
 {% endfor %}
 
-echo "Scenario stopped."
-cd "$CURRENT_DIR" || exit 1
+if [ "$CLEANUP_FAILED" -ne 0 ]; then
+    echo "Scenario cleanup completed with errors." >&2
+    exit 1
+fi
+
+echo "Scenario stopped successfully."

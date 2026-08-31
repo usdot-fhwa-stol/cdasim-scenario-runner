@@ -13,18 +13,135 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-CURRENT_DIR=$(pwd)
+# Exit immediately when startup fails. ScenarioRunner owns the deployment
+# lifecycle and invokes the generated stop script from its finally block.
+set -e
 
-# Stop any partially started scenario, restore the caller's working directory,
-# and return a failure status when a command in this script fails.
-# Usage: registered with `trap cleanup ERR`; do not call during normal startup.
-cleanup() {
-    echo "Cleaning up..."
-    bash "{{ temp_dir }}/sim_stop.sh" 2>/dev/null || true
-    cd "$CURRENT_DIR" || exit 1
-    exit 1
+# Create a host directory if needed and make its top-level directory writable.
+# Existing contents are not changed because logs from containers may be owned
+# by different users and do not need to be rewritten before each scenario.
+# Usage: prepare_host_directory "/absolute/host/path"
+prepare_host_directory() {
+    local host_dir="$1"
+
+    if ! mkdir -p "$host_dir" 2>/dev/null; then
+        echo "Requesting elevated permission to create $host_dir..."
+        if ! sudo mkdir -p "$host_dir"; then
+            echo "Error: Could not create $host_dir." >&2
+            exit 1
+        fi
+    fi
+    if [ -w "$host_dir" ]; then
+        return
+    fi
+
+    if ! chmod a+rwx "$host_dir" 2>/dev/null; then
+        echo "Requesting elevated permission to make $host_dir writable..."
+        if ! sudo chmod a+rwx "$host_dir"; then
+            echo "Error: Could not update permissions for $host_dir." >&2
+            exit 1
+        fi
+    fi
 }
-trap cleanup ERR
+
+# Install the selected scenario map as vector_map.osm. An identical installed
+# map is left unchanged; a different one is moved to the next available
+# backup_NUMBER.osm before the selected map is copied.
+# Usage: stage_map_file SOURCE_FILE TARGET_FILE MAP_NAME TEST_CASE_LABEL
+stage_map_file() {
+    local source_file="$1"
+    local target_file="$2"
+    local map_name="$3"
+    local test_case="$4"
+    local backup_index=1
+    local backup_file
+
+    if [ ! -f "$source_file" ]; then
+        echo "Error: $map_name map specified in parameters.yaml for test case $test_case cannot be found at $source_file" >&2
+        exit 1
+    fi
+
+    if [ -f "$target_file" ]; then
+        if cmp -s "$source_file" "$target_file"; then
+            echo "Map already matches $target_file; skipping copy."
+            return
+        fi
+
+        while :; do
+            backup_file="$(dirname "$target_file")/backup_${backup_index}.osm"
+            if [ ! -e "$backup_file" ]; then
+                break
+            fi
+            backup_index=$((backup_index + 1))
+        done
+        mv "$target_file" "$backup_file"
+        echo "Backed up existing map to $backup_file"
+    fi
+
+    cp "$source_file" "$target_file"
+    echo "Installed $map_name map as $target_file"
+}
+
+# Copy one vehicle route into the CARMA route directory when the target does
+# not already exist. Existing routes are intentionally left unchanged.
+# Usage: stage_route_file SOURCE_FILE TARGET_FILE ROUTE_NAME VEHICLE_NAME
+stage_route_file() {
+    local source_file="$1"
+    local target_file="$2"
+    local route_name="$3"
+    local vehicle_name="$4"
+
+    if [ ! -f "$source_file" ]; then
+        echo "Error: $route_name route specified in parameters.yaml for vehicle $vehicle_name cannot be found at $source_file" >&2
+        exit 1
+    fi
+    if [ -e "$target_file" ]; then
+        echo "Route already exists at $target_file; skipping copy."
+        return
+    fi
+
+    cp "$source_file" "$target_file"
+    echo "Installed $route_name route at $target_file"
+}
+
+# Validate the host Docker socket and export its group ID for Compose services
+# that use the socket to launch CARLA or NS-3 containers.
+# Usage: prepare_docker_socket
+prepare_docker_socket() {
+    local socket_path="/var/run/docker.sock"
+
+    if [ ! -S "$socket_path" ]; then
+        echo "Error: $socket_path is not a Docker socket." >&2
+        exit 1
+    fi
+    if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$socket_path"); then
+        echo "Error: Could not determine the group ID of $socket_path." >&2
+        exit 1
+    fi
+    export DOCKER_SOCKET_GID
+}
+
+prepare_host_directory "/opt/carma-simulation/tmp"
+prepare_host_directory "/opt/carma-simulation/logs"
+prepare_host_directory "/opt/carma/logs"
+prepare_host_directory "/opt/carma/maps"
+prepare_host_directory "/opt/carma/routes"
+
+stage_map_file \
+    {{ shell_quote(scenario_resources.map_file.source) }} \
+    {{ shell_quote(scenario_resources.map_file.target) }} \
+    {{ shell_quote(scenario_resources.map_file.name) }} \
+    {{ shell_quote(scenario_resources.map_file.test_case) }}
+{% for route in scenario_resources.routes %}
+stage_route_file \
+    {{ shell_quote(route.source) }} \
+    {{ shell_quote(route.target) }} \
+    {{ shell_quote(route.name) }} \
+    {{ shell_quote(route.vehicle) }}
+{% endfor %}
+
+#  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
+prepare_docker_socket
 
 # Create a host directory when it does not exist and make it writable by the
 # scenario containers. The function uses the current user's permissions first
@@ -75,7 +192,7 @@ docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               pull
+               pull --policy missing
 {% endfor %}
 
 {% for network in networks %}
@@ -86,13 +203,15 @@ docker network create --driver {{ network.driver }}{% if network.subnet is defin
 docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_container.image }}" -c '{{ config_container.init_command }}'
 {% endfor %}
 
+# Recreate Compose containers so they attach to the networks created for this
+# run instead of reusing stale container metadata from a previous interrupted
+# run whose external networks may have been deleted and recreated.
 {% for c in scenario %}
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               up -d
+               up -d --force-recreate
 {% endfor %}
 
 echo "Scenario started."
-cd "$CURRENT_DIR" || exit 1
