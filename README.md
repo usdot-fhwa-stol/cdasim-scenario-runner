@@ -124,9 +124,9 @@ Together, they decouple **what image to run** from **how it is configured**, pro
 
 ### Prerequisites
 ```bash
-sudo apt install docker.io docker-compose python3-pip python3.12-venv
+sudo apt install docker.io docker-compose python3-pip python3.10-venv
 python3 -m venv .venv
-source ./venv/bin/activate
+source .venv/bin/activate
 python3 -m pip install -r requirements.txt
 ```
 
