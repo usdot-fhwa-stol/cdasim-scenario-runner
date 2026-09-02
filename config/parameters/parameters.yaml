@@ -13,9 +13,11 @@ test_cases:
         CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic-cdasim-config-image
         CONFIG_COMPOSE_PATH: /opt/carma-simulation/config/docker-compose.yml
         CONFIG_IMAGE_PULL_POLICY: missing
-        COMPOSE_OVERRIDES: []
+        COMPOSE_OVERRIDES:
+          - ../compose/cdasim-ns3-runtime.override.yml
         settings:
           MOSAIC_SCENARIO: Town10
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -60,9 +62,11 @@ test_cases:
         CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic-cdasim-config-image
         CONFIG_COMPOSE_PATH: /opt/carma-simulation/config/docker-compose.yml
         CONFIG_IMAGE_PULL_POLICY: missing
-        COMPOSE_OVERRIDES: []
+        COMPOSE_OVERRIDES:
+          - ../compose/cdasim-ns3-runtime.override.yml
         settings:
           MOSAIC_SCENARIO: Town10
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0

@@ -93,11 +93,19 @@ configure those entries:
 | **`RUNTIME_IMAGE_TAG`** | The version tag for the runtime image. Defines which CARMA or CDASim build version to execute. |
 | **`CONFIG_IMAGE_FULL`** | The full image name (including tag) of the configuration image containing the deployment's embedded `docker-compose.yml`. |
 | **`COMPOSE_FILE`** | A repository-local base Compose file used instead of `CONFIG_IMAGE_FULL`. |
+| **`NS3_FEDERATE_IMAGE`** | CDASim setting containing the full NS-3 federate image reference. Scenario Runner writes it into the generated CDASim `runtime.json`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
 
 `START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
 string. Scenario Runner normalizes it to a floating-point value because the
 CARMA-CARLA ROS 2 node declares `start_delay_in_seconds` as a double parameter.
+
+When `NS3_FEDERATE_IMAGE` is configured for CDASim, Scenario Generator reads
+`config/cdasim/runtime.json`, updates the `dockerImage` field for the federate
+whose `id` is `ns3`, and writes `tmp/cdasim-runtime.json`. The
+`cdasim-ns3-runtime.override.yml` Compose override mounts that generated file at
+`/opt/carma-simulation/etc/runtime.json`. The repository template is not
+modified.
 
 ### How these image fields interact
 

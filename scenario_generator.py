@@ -12,14 +12,21 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-import yaml
+import json
 import os
 import re
 import shlex
 import subprocess
-from jinja2 import Template
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import yaml
+from jinja2 import Template
+
+
+CDASIM_RUNTIME_TEMPLATE_PATH = (
+    Path(__file__).resolve().parent / "config" / "cdasim" / "runtime.json"
+)
 
 
 class ScenarioGenerator:
@@ -112,6 +119,68 @@ class ScenarioGenerator:
         env_path.write_text(content)
         print(f"Generated {env_path}")
         return str(env_path)
+
+    def _generate_cdasim_runtime_with_ns3_image(
+        self, cdasim: Dict[str, Any]
+    ) -> str:
+        """Create a runtime.json with the configured NS-3 federate image.
+
+        Args:
+            cdasim: The CDASim deployment entry from ``env_settings``. Its
+                ``settings`` mapping must define ``NS3_FEDERATE_IMAGE``.
+
+        Returns:
+            The absolute path to ``tmp/cdasim-runtime.json``. The same path is
+            added to the CDASim settings as ``CDASIM_RUNTIME_FILE`` for the
+            runtime Compose override.
+
+        Raises:
+            FileNotFoundError: If the repository runtime template is missing.
+            ValueError: If ``NS3_FEDERATE_IMAGE`` is empty, the template does
+                not contain a ``federates`` list, or it does not contain
+                exactly one federate whose ``id`` is ``ns3``.
+            json.JSONDecodeError: If the runtime template is not valid JSON.
+
+        Example:
+            With ``NS3_FEDERATE_IMAGE`` set to
+            ``usdotfhwastoldev/ns3-federate:develop-dsrc``, this method writes a
+            generated runtime file containing that value in the NS-3
+            federate's ``dockerImage`` field.
+        """
+
+        settings = cdasim.setdefault("settings", {})
+        ns3_image = settings.get("NS3_FEDERATE_IMAGE")
+        if not isinstance(ns3_image, str) or not ns3_image.strip():
+            raise ValueError("NS3_FEDERATE_IMAGE must be a non-empty string")
+
+        with CDASIM_RUNTIME_TEMPLATE_PATH.open(
+            "r", encoding="utf-8"
+        ) as runtime_template:
+            runtime_config = json.load(runtime_template)
+
+        federates = runtime_config.get("federates")
+        if not isinstance(federates, list):
+            raise ValueError("CDASim runtime template has no federates list")
+
+        ns3_federates = [
+            federate
+            for federate in federates
+            if isinstance(federate, dict) and federate.get("id") == "ns3"
+        ]
+        if len(ns3_federates) != 1:
+            raise ValueError(
+                "CDASim runtime template must contain exactly one ns3 federate"
+            )
+
+        ns3_federates[0]["dockerImage"] = ns3_image.strip()
+        runtime_path = self.tmp_dir / "cdasim-runtime.json"
+        runtime_path.write_text(
+            json.dumps(runtime_config, indent=4) + "\n",
+            encoding="utf-8",
+        )
+        settings["CDASIM_RUNTIME_FILE"] = str(runtime_path)
+        print(f"Generated {runtime_path}")
+        return str(runtime_path)
 
     # --------------------------------------------------------------------- #
     # 3. Extract docker-compose.yml (once per project)
@@ -632,6 +701,10 @@ class ScenarioGenerator:
             self.load_config()
 
         es = self.config['env_settings']
+
+        cdasim_settings = es['cdasim'].get('settings', {})
+        if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
+            self._generate_cdasim_runtime_with_ns3_image(es['cdasim'])
 
         # Generate .env files
         self.generate_env_file('.env.cdasim', es['cdasim'])
