@@ -25,7 +25,10 @@ from jinja2 import Template
 
 
 CDASIM_RUNTIME_TEMPLATE_PATH = (
-    Path(__file__).resolve().parent / "config" / "cdasim" / "runtime.json"
+    Path(__file__).resolve().parent
+    / "config"
+    / "cdasim"
+    / "runtime.template.json"
 )
 
 
@@ -136,9 +139,10 @@ class ScenarioGenerator:
 
         Raises:
             FileNotFoundError: If the repository runtime template is missing.
-            ValueError: If ``NS3_FEDERATE_IMAGE`` is empty, the template does
-                not contain a ``federates`` list, or it does not contain
-                exactly one federate whose ``id`` is ``ns3``.
+            ValueError: If ``settings`` is not a mapping,
+                ``NS3_FEDERATE_IMAGE`` is empty, the template does not contain
+                a ``federates`` list, or it does not contain exactly one
+                federate whose ``id`` is ``ns3``.
             json.JSONDecodeError: If the runtime template is not valid JSON.
 
         Example:
@@ -148,7 +152,9 @@ class ScenarioGenerator:
             federate's ``dockerImage`` field.
         """
 
-        settings = cdasim.setdefault("settings", {})
+        settings = cdasim.get("settings")
+        if not isinstance(settings, dict):
+            raise ValueError("CDASim settings must be a mapping")
         ns3_image = settings.get("NS3_FEDERATE_IMAGE")
         if not isinstance(ns3_image, str) or not ns3_image.strip():
             raise ValueError("NS3_FEDERATE_IMAGE must be a non-empty string")
