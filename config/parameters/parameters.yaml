@@ -10,7 +10,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic-cdasim-config-image
+        CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic_cdasim_config_image
         CONFIG_COMPOSE_PATH: /opt/carma-simulation/config/docker-compose.yml
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES: []
@@ -56,7 +56,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic-cdasim-config-image
+        CONFIG_IMAGE_FULL: usdotfhwastoldev/cdasim-config:develop-basic_cdasim_config_image
         CONFIG_COMPOSE_PATH: /opt/carma-simulation/config/docker-compose.yml
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES: []
