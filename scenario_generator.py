@@ -297,8 +297,26 @@ class ScenarioGenerator:
         return str(path.resolve())
 
     def _base_compose(self, component: Dict, project_name: str) -> str:
+        """ Resolve the base docker compose file for a component. If COMPOSE_FILE is set,
+        will attempt to resolve file path or pull OCI artifact. If not, will attempt to 
+        extract docker compose from CONFIG_IMAGE_FULL docker image using CONFIG_COMPOSE_PATH
+
+        Args:
+            component (Dict): The component configuration dictionary.
+
+        Returns:
+            str: Resolved path for docker compose file or OCI artifact reference
+
+        """
         if component.get('COMPOSE_FILE'):
-            return self._resolve_compose_path(component['COMPOSE_FILE'])
+            compose_file_path = component['COMPOSE_FILE'];
+            # Support OCI docker compose artifact and file path resolution
+            if compose_file_path.startswith('oci://'):
+                return compose_file_path
+            else:
+                # Return absolute file path for compose file from relative path.
+                return self._resolve_compose_path(compose_file_path)
+        # Extract docker compose from config image if COMPOSE_FILE is not set
         return self.extract_compose_from_image(
             component.get('CONFIG_IMAGE_FULL'),
             project_name,
