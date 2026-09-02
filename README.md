@@ -101,8 +101,8 @@ string. Scenario Runner normalizes it to a floating-point value because the
 CARMA-CARLA ROS 2 node declares `start_delay_in_seconds` as a double parameter.
 
 When `NS3_FEDERATE_IMAGE` is configured for CDASim, Scenario Generator reads
-`config/cdasim/runtime.json`, updates the `dockerImage` field for the federate
-whose `id` is `ns3`, and writes `tmp/cdasim-runtime.json`. The
+`config/cdasim/runtime.template.json`, updates the `dockerImage` field for the
+federate whose `id` is `ns3`, and writes `tmp/cdasim-runtime.json`. The
 `cdasim-ns3-runtime.override.yml` Compose override mounts that generated file at
 `/opt/carma-simulation/etc/runtime.json`. The repository template is not
 modified.
