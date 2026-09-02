@@ -15,6 +15,7 @@
 import yaml
 import os
 import re
+import shlex
 import subprocess
 from jinja2 import Template
 from pathlib import Path
@@ -40,6 +41,8 @@ class ScenarioGenerator:
         "platform": "platform_ros1",
         "msger_roscore": "messenger_roscore",
         "msger_ros1_bridge": "messenger_ros1_bridge",
+        "v2x_ros_driver": "v2x-ros-driver",
+        "messenger_v2x_ros_driver": "messenger-v2x-ros-driver",
     }
 
     def __init__(
@@ -465,7 +468,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "messenger_v2x_ros_driver": {
+                        "messenger-v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
@@ -507,7 +510,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "v2x_ros_driver": {
+                        "v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
@@ -607,6 +610,7 @@ class ScenarioGenerator:
             'scenario': scenario,
             'networks': es.get('runner_networks', []),
             'config_containers': list(self._config_containers.values()),
+            'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
 
@@ -616,7 +620,7 @@ class ScenarioGenerator:
     def generate_start_script(self) -> str:
         with open(self.start_template, 'r') as f:
             tmpl = Template(f.read())
-        content = tmpl.render(**self.data)
+        content = tmpl.render(shell_quote=shlex.quote, **self.data)
 
         start_path = self.tmp_dir / "sim_start.sh"
         start_path.write_text(content)
