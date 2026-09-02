@@ -293,9 +293,27 @@ class ScenarioGenerator:
             path = self.compose_root / path
         return str(path.resolve())
 
-    def _base_compose(self, component: Dict, project_name: str) -> str:
+    def _base_compose(self, component: Dict) -> str:
+        """ Resolve the base docker compose file for a component. If COMPOSE_FILE is set,
+        will attempt to resolve file path or pull OCI artifact. If not, will attempt to 
+        extract docker compose from CONFIG_IMAGE_FULL docker image using CONFIG_COMPOSE_PATH
+
+        Args:
+            component (Dict): The component configuration dictionary.
+
+        Returns:
+            str: Resolved path for docker compose file or OCI artifact reference
+
+        """
         if component.get('COMPOSE_FILE'):
-            return self._resolve_compose_path(component['COMPOSE_FILE'])
+            compose_file_path = component['COMPOSE_FILE'];
+            # Support OCI docker compose artifact and file path resolution
+            if compose_file_path.startswith('oci://'):
+                return compose_file_path
+            else:
+                # Return absolute file path for compose file from relative path.
+                return self._resolve_compose_path(compose_file_path)
+        # Extract docker compose from config image if COMPOSE_FILE is not set
         return self.extract_compose_from_image(
             component.get('CONFIG_IMAGE_FULL'),
             project_name,
@@ -303,8 +321,8 @@ class ScenarioGenerator:
             component.get('CONFIG_IMAGE_PULL_POLICY', 'missing')
         )
 
-    def _compose_files(self, component: Dict, project_name: str) -> List[str]:
-        compose_files = [self._base_compose(component, project_name)]
+    def _compose_files(self, component: Dict) -> List[str]:
+        compose_files = [self._base_compose(component)]
         compose_files.extend(
             self._resolve_compose_path(path)
             for path in component.get('COMPOSE_OVERRIDES', [])
@@ -516,7 +534,7 @@ class ScenarioGenerator:
 
         # CDASim
         cd = es['cdasim']
-        compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
+        compose_files = self._compose_files(cd)
         private_network_override = self._generate_cdasim_network_override(
             es.get('vehicles', [])
         )
@@ -536,7 +554,7 @@ class ScenarioGenerator:
         cloud = es.get('carma_cloud')
         if cloud:
             compose_files = self._compose_files(
-                cloud, cloud['PROJECT_NAME']
+                cloud
             )
             cloud_web_override = self._generate_cloud_web_xml_override(cloud)
             if cloud_web_override:
@@ -553,7 +571,7 @@ class ScenarioGenerator:
 
         # Vehicles
         for i, v in enumerate(es.get('vehicles', []), 1):
-            compose_files = self._compose_files(v, v['PROJECT_NAME'])
+            compose_files = self._compose_files(v)
             if v.get('COMPONENT', 'platform') == 'messenger':
                 compose_files.append(
                     self._generate_messenger_v2x_override(v, i)
@@ -574,7 +592,7 @@ class ScenarioGenerator:
 
         # Streets
         for i, s in enumerate(es.get('streets', []), 1):
-            compose_files = self._compose_files(s, s['PROJECT_NAME'])
+            compose_files = self._compose_files(s)
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],
