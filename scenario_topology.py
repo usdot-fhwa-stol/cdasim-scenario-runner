@@ -242,8 +242,8 @@ def _apply_street_topology(
             {
                 "STREET_ID": f"street_{index}",
                 "SIMULATION_MODE": True,
-                "SIMULATION_HOST": topology.core["CDASIM_SIM_HOST"],
-                "SIMULATION_IP": topology.core["CDASIM_SIM_HOST"],
+                "SIMULATION_HOST": "cdasim",
+                "SIMULATION_IP": "cdasim",
                 "SIMULATION_REGISTRATION_PORT": 1615,
                 "TIME_SYNC_PORT": 7575,
                 "SIM_V2X_PORT": 1517,

@@ -298,7 +298,11 @@ class ScenarioGenerator:
 
     def _base_compose(self, component: Dict, project_name: str) -> str:
         if component.get('COMPOSE_FILE'):
-            return self._resolve_compose_path(component['COMPOSE_FILE'])
+            # If compose begins with "oci://" its path does not need to be resolved
+            if component['COMPOSE_FILE'].startswith("oci://"):
+                return component['COMPOSE_FILE']
+            else:
+                return self._resolve_compose_path(component['COMPOSE_FILE'])
         return self.extract_compose_from_image(
             component.get('CONFIG_IMAGE_FULL'),
             project_name,

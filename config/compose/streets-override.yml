@@ -1,0 +1,13 @@
+services:
+  v2xhub:
+    networks:
+      v2xhub_data_internal:
+      v2xhub_app_external:
+      sim_net:
+        alias:
+          - ${V2XHUB_SIM_HOST}
+          - ${PROJECT_NAME}-v2xhub
+networks:
+  sim_net:
+    external: true
+    name: ${SIM_NETWORK_NAME:-xil_sim_net}
