@@ -1,4 +1,4 @@
-#  Copyright (C) 2025 LEIDOS.
+#  Copyright (C) 2026 LEIDOS.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
@@ -20,6 +20,7 @@ import time
 from pathlib import Path
 from scenario_generator import ScenarioGenerator
 from data_collector import DataCollector
+from data_analyzer import DataAnalyzer
 from scenario_topology import apply_scenario_topology
 
 
@@ -36,6 +37,7 @@ class ScenarioRunner:
         self.test_cases = []
         self.tmp_dir = Path("tmp").resolve()
         self.collector = DataCollector()
+        self.analyzer = DataAnalyzer()
 
     def load_parameters(self):
         if not self.parameters_path.exists():
@@ -107,13 +109,24 @@ class ScenarioRunner:
         if not self.test_cases:
             self.load_parameters()
 
+        # TODO: This code block will be uncommented and newly added code will be 
+        # moved to self._run_one(i, case)
+        # Commenting out this to stop the test cases from running
+        # for i, case in enumerate(self.test_cases, start=1):
+        #     try:
+        #         self._run_one(i, case)
+        #     except Exception as e:
+        #         print(f"Scenario {i} failed: {e}")
+        #         if not self.generate_only and self.tmp_dir.exists():
+        #             shutil.rmtree(self.tmp_dir)
+
         for i, case in enumerate(self.test_cases, start=1):
-            try:
-                self._run_one(i, case)
-            except Exception as e:
-                print(f"Scenario {i} failed: {e}")
-                if not self.generate_only and self.tmp_dir.exists():
-                    shutil.rmtree(self.tmp_dir)
+            print("Collecting data outputs...")
+            case_dir = self.collector.collect(i, case)
+            self.collector.clear_sources(case)
+
+            print("Running data analysis...")
+            self.analyzer.analyze(case_dir)
 
 
 def parse_args():

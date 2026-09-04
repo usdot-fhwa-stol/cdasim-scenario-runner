@@ -1,4 +1,4 @@
-#  Copyright (C) 2025 LEIDOS.
+#  Copyright (C) 2026 LEIDOS.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
@@ -27,7 +27,7 @@ class DataCollector:
         data_output = config.get("data_output")
         if not data_output:
             print("No data_output section. Skipping.")
-            return
+            return None
 
         out_dir = Path(data_output["output_directory"])
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -43,6 +43,24 @@ class DataCollector:
         for key, value in collect_cfg.items():
             print(key, value)
             self._collect_folder(Path(value), case_dir / key, key == "mosaic_logs")
+        
+        return case_dir
+
+    def clear_sources(self, config: dict):
+        data_output = config.get("data_output")
+        if not data_output:
+            return
+
+        for key, value in data_output.get("collect", {}).items():
+            src = Path(value)
+            if not src.exists():
+                continue
+            for child in src.iterdir():
+                if child.is_symlink() or child.is_file():
+                    child.unlink()
+                else:
+                    shutil.rmtree(child)
+            print(f"Cleared {src}")
 
     def _collect_folder(self, src_base: Path, dest: Path, latest_only: bool = False):
         src = (self.latest_subdir(src_base) or src_base) if latest_only else src_base
