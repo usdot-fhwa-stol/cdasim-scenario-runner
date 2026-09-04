@@ -27,14 +27,7 @@ WORKDIR /home/carma
 # ================================
 # Workspace Setup
 # ================================
-# docker/install.sh clones carma-msgs and builds carma_planning_msgs (+ its
-# in-repo deps: carma_cmake_common, carma_v2x_msgs, j2735_v2x_msgs,
-# j3224_v2x_msgs) so the analysis scripts below can deserialize
-# CARMA-specific topics out of the collected .mcap files.
 COPY --chown=carma:carma cdasim-scenario-runner/data-analysis-script/docker ./docker
-
-# Analysis scripts, pulled in from their own repos (see build-image.sh for
-# the build context these paths are relative to).
 COPY --chown=carma:carma cdasim-config/cdasim_data_analysis_scripts ./cdasim_data_analysis_scripts
 COPY --chown=carma:carma carma-analytics-fotda/src/carma-platform ./carma-platform-scripts
 
