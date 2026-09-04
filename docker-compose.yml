@@ -1,6 +1,6 @@
 services:
   cdasim:
-    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/cdasim:${CDASIM-VERSION:-develop}"
+    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/cdasim:${CDASIM_VERSION:-develop}"
     container_name: cdasim
     privileged: true
     networks:
@@ -51,7 +51,7 @@ services:
       - --carla-host=carla-server
       - "--host=0.0.0.0"
   econolite-virtual-controller:
-    image: usdotfhwastol/econolite-virtual-controller:latest
+    image: usdotfhwastol/econolite-virtual-controller:save
     container_name: evc
     restart: always
     networks:

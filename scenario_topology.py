@@ -241,6 +241,10 @@ def _apply_street_topology(
         settings.update(
             {
                 "STREET_ID": f"street_{index}",
+                "V2XHUB_VOLUME_PATH": "/opt/v2xhub",
+                "MYSQL_PASSWORD": "ChangeMe123!",
+                "V2XHUB_USER": "tester",
+                "V2XHUB_PASSWORD": "ChangeMe123!",
                 "SIMULATION_MODE": True,
                 "SIMULATION_HOST": topology.core["CDASIM_SIM_HOST"],
                 "SIMULATION_IP": topology.core["CDASIM_SIM_HOST"],

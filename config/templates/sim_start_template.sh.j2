@@ -126,6 +126,9 @@ prepare_host_directory "/opt/carma-simulation/logs"
 prepare_host_directory "/opt/carma/logs"
 prepare_host_directory "/opt/carma/maps"
 prepare_host_directory "/opt/carma/routes"
+prepare_host_directory "/opt/v2xhub/download" # TODO: Remove 
+prepare_host_directory "/opt/v2xhub/ssl" # TODO: Remove 
+prepare_host_directory "/opt/v2xhub/logs"
 
 stage_map_file \
     {{ shell_quote(scenario_resources.map_file.source) }} \
