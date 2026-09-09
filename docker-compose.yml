@@ -8,22 +8,24 @@ services:
     environment:
       DISPLAY: "${DISPLAY}"
       QT_X11_NO_MITSHM: "1"
+      MOSAIC_DOCKER_NETWORK: "container:cdasim"
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: graphics,utility,compute
+      CARLA_RENDER_OFFSCREEN: ${CARLA_RENDER_OFFSCREEN:-true}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/carma-simulation/tmp:/opt/carma-simulation/tmp
       - /dev:/dev
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - "${CDASIM_LOG_ROOT:-/opt/carma-simulation/logs}:/opt/carma-simulation/logs"
+      - "${CDASIM_LOG_ROOT}:/opt/carma-simulation/logs"
     group_add:
-      # Enable docker in docker. Exported from start script
-      - "${DOCKER_SOCKET_GID}"
+      - "${DOCKER_SOCKET_GID:?DOCKER_SOCKET_GID must be set by Scenario Runner}"
     deploy:
       resources:
         reservations:
           devices:
             - capabilities: [gpu]
-    command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO:-Town10}"
+    command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO}"
 
   carla-sensor-lib:
     image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/carla-sensor-lib:${CARLA_SENSOR_LIB_VERSION:-develop}"

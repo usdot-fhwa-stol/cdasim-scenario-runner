@@ -16,7 +16,8 @@
 # Exit immediately when startup fails. ScenarioRunner owns the deployment
 # lifecycle and invokes the generated stop script from its finally block.
 set -e
-
+# For docker display connection
+xhost +local:docker
 # Create a host directory if needed and make its top-level directory writable.
 # Existing contents are not changed because logs from containers may be owned
 # by different users and do not need to be rewritten before each scenario.
