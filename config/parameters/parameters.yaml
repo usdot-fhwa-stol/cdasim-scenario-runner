@@ -10,7 +10,7 @@ test_cases:
   #   env_settings:
   #     cdasim:
   #       PROJECT_NAME: cdasim
-  #       COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+  #       COMPOSE_FILE: ../../docker-compose.yml
   #       CONFIG_IMAGE_PULL_POLICY: missing
   #       COMPOSE_OVERRIDES:
   #         - ../compose/cdasim-ns3-runtime.override.yml
@@ -31,7 +31,7 @@ test_cases:
   #         settings:
   #           VEHICLE_ID: carma_1
   #           CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-  #           CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop-ros2
+  #           CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
   #           V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
   #           VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
   #           SELECTED_ROUTE: Town10_event_route_1

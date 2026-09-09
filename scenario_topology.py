@@ -253,6 +253,18 @@ def _apply_street_topology(
                 "SIM_V2X_PORT": 1517,
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
+                # For all external port set to zero. These configuration values are used to setup port mapping on host
+                # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
+                # find an open port on the host machine and use that.
+                "MUST_SENSOR_PLUGIN_EXTERNAL_PORT": 0, 
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT": 0,
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT": 0,
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT": 0,
+                "CARMA_CLOUD_EXTERNAL_PORT": 0,
+                "TIM_PLUGIN_EXTERNAL_PORT": 0,
+                "SPAT_PLUGIN_EXTERNAL_PORT": 0,
+                "MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT": 0,
+                "COMMAND_PLUGIN_EXTERNAL_PORT": 0,
                 "V2XHUB_LOG_ROOT": data_output["collect"]["v2xhub_logs"],
                 "SIM_NETWORK_NAME": topology.core["SIM_NETWORK_NAME"],
                 "INFRASTRUCTURE_HOST": allocation[
