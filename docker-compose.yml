@@ -16,7 +16,8 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - "${CDASIM_LOG_ROOT:-/opt/carma-simulation/logs}:/opt/carma-simulation/logs"
     group_add:
-      - "998"
+      # Enable docker in docker. Exported from start script
+      - "${DOCKER_SOCKET_GID}"
     deploy:
       resources:
         reservations:
@@ -61,8 +62,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./evc_sumo/:/home/carma/src/resources/
-      - ./PyEOS/:/home/carma/PyEOS
-      - pyeos_data:/home/carma/shared_data
+      - ./pyeos_db:/home/carma/shared_data
     depends_on:
       - cdasim
     command: >
@@ -73,5 +73,3 @@ networks:
   carma_sim_net:
     external: true
     name: "${SIM_NETWORK_NAME:-carma-sim-net}"
-volumes:
-  pyeos_data:

@@ -180,6 +180,7 @@ prepare_docker_socket() {
         echo "Error: Could not determine the group ID of $socket_path." >&2
         exit 1
     fi
+    echo "$DOCKER_SOCKET_GID"
     export DOCKER_SOCKET_GID
 }
 

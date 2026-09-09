@@ -51,7 +51,7 @@ test_cases:
   #       rosbags: /opt/carma/logs
 
   - label: town10_two_vehicles
-    runtime_seconds: 300
+    runtime_seconds: 90
     MAP: Town10
 
     env_settings:

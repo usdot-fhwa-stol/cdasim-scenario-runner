@@ -291,6 +291,8 @@ class ScenarioRunner:
             runtime = case.get("runtime_seconds", 60)
             print(f"Running for {runtime} seconds...")
             time.sleep(runtime)
+        except subprocess.CalledProcessError as e:
+            print(f"Start script {start_sh} failed with error : {e}")
         except KeyboardInterrupt:
             print("Interrupt received; stopping the scenario...")
             raise
