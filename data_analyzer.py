@@ -26,34 +26,46 @@ class DataAnalyzer:
         self.scripts_dir = Path(scripts_dir).resolve()
         self.image = image
 
-    def analyze(self, case_dir: Path, vehicle_name: str = "carma_1"):
+    def analyze(self, case_dir: Path, case: dict):
         if not case_dir:
             print("No case_dir to analyze. Skipping.")
             return
 
+        vehicle_names = []
+        for vehicle in case.get("env_settings", {}).get("vehicles", []):
+            vehicle_names.append(vehicle["settings"]["VEHICLE_ID"])
+
         mosaic_logs = case_dir / "mosaic_logs"
-        if mosaic_logs.exists():
-            self._run_log_analyzer(mosaic_logs, vehicle_name)
-        else:
-            print(f"No mosaic_logs found in {case_dir}. Skipping log analysis.")
+        log_dirs = [d for d in mosaic_logs.iterdir() if d.is_dir()] if mosaic_logs.exists() else []
+        if not log_dirs:
+            print(f"No log directories found in {mosaic_logs}. Skipping log analysis.")
+        for log_dir in log_dirs:
+            for vehicle_name in vehicle_names:
+                self._run_log_analyzer(log_dir, vehicle_name, case_dir)
 
         rosbags = case_dir / "rosbags"
-        mcap_files = list(rosbags.rglob("*.mcap")) if rosbags.exists() else []
-        if not mcap_files:
-            print(f"No .mcap files found in {rosbags}. Skipping mcap analysis.")
-        for mcap_file in mcap_files:
-            self._run_mcap_analyzer(mcap_file, vehicle_name)
-
         if rosbags.exists():
+            for vehicle_name in vehicle_names:
+                vehicle_dir = rosbags / vehicle_name
+                if not vehicle_dir.exists():
+                    print(f"No rosbags found for {vehicle_name} in {rosbags}. Skipping mcap analysis.")
+                    continue
+                mcap_files = list(vehicle_dir.rglob("*.mcap"))
+                if not mcap_files:
+                    print(f"No .mcap files found in {vehicle_dir}. Skipping mcap analysis.")
+                for mcap_file in mcap_files:
+                    self._run_mcap_analyzer(mcap_file, vehicle_name)
+
             self._run_regression_analysis(rosbags, case_dir)
         else:
-            print(f"No rosbags found in {case_dir}. Skipping control/regression analysis.")
+            print(f"No rosbags found in {case_dir}. Skipping mcap/control/regression analysis.")
 
-    def _run_log_analyzer(self, mosaic_logs: Path, vehicle_name: str):
+    def _run_log_analyzer(self, log_dir: Path, vehicle_name: str, case_dir: Path):
         script = self.scripts_dir / "cdasim_log_analyzer.py"
         subprocess.run(
-            ["python3", str(script), str(mosaic_logs), "--vehicle-name", vehicle_name],
+            ["python3", str(script), str(log_dir), "--vehicle-name", vehicle_name],
             check=True,
+            cwd=case_dir,
         )
 
     def _run_mcap_analyzer(self, mcap_file: Path, vehicle_name: str):

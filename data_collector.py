@@ -17,12 +17,6 @@ import shutil
 
 class DataCollector:
 
-    def latest_subdir(self, base: Path):
-        if not base.exists():
-            return None
-        subs = [p for p in base.iterdir() if p.is_dir()]
-        return max(subs, key=lambda p: p.stat().st_mtime) if subs else None
-
     def collect(self, index: int, config: dict):
         data_output = config.get("data_output")
         if not data_output:
@@ -42,8 +36,8 @@ class DataCollector:
 
         for key, value in collect_cfg.items():
             print(key, value)
-            self._collect_folder(Path(value), case_dir / key, key == "mosaic_logs")
-        
+            self._collect_folder(Path(value), case_dir / key)
+
         return case_dir
 
     def clear_sources(self, config: dict):
@@ -62,11 +56,9 @@ class DataCollector:
                     shutil.rmtree(child)
             print(f"Cleared {src}")
 
-    def _collect_folder(self, src_base: Path, dest: Path, latest_only: bool = False):
-        src = (self.latest_subdir(src_base) or src_base) if latest_only else src_base
-        print(src)
-        if src and src.exists():
-            shutil.copytree(src, dest, dirs_exist_ok=True, symlinks=True)
-            print(f"Copied {src} → {dest}")
+    def _collect_folder(self, src_base: Path, dest: Path):
+        if src_base.exists():
+            shutil.copytree(src_base, dest, dirs_exist_ok=True, symlinks=True)
+            print(f"Copied {src_base} → {dest}")
         else:
             print(f"No logs found in: {src_base}")

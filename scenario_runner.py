@@ -97,36 +97,34 @@ class ScenarioRunner:
             subprocess.run(["bash", stop_sh], check=True)
 
         print("Collecting data outputs...")
-        self.collector.collect(idx, case)
+        case_dir = self.collector.collect(idx, case)
+        self.collector.clear_sources(case)
 
         # 7. ALWAYS clean tmp/
         shutil.rmtree(self.tmp_dir)
         print(f"Cleaned {self.tmp_dir}")
 
         print(f"Scenario {idx} complete.\n")
+        return case_dir, case
 
     def run(self):
         if not self.test_cases:
             self.load_parameters()
 
-        # TODO: This code block will be uncommented and newly added code will be 
-        # moved to self._run_one(i, case)
-        # Commenting out this to stop the test cases from running
-        # for i, case in enumerate(self.test_cases, start=1):
-        #     try:
-        #         self._run_one(i, case)
-        #     except Exception as e:
-        #         print(f"Scenario {i} failed: {e}")
-        #         if not self.generate_only and self.tmp_dir.exists():
-        #             shutil.rmtree(self.tmp_dir)
-
+        collected = []
         for i, case in enumerate(self.test_cases, start=1):
-            print("Collecting data outputs...")
-            case_dir = self.collector.collect(i, case)
-            self.collector.clear_sources(case)
+            try:
+                result = self._run_one(i, case)
+                if result:
+                    collected.append(result)
+            except Exception as e:
+                print(f"Scenario {i} failed: {e}")
+                if not self.generate_only and self.tmp_dir.exists():
+                    shutil.rmtree(self.tmp_dir)
 
+        for case_dir, case in collected:
             print("Running data analysis...")
-            self.analyzer.analyze(case_dir)
+            self.analyzer.analyze(case_dir, case)
 
 
 def parse_args():
