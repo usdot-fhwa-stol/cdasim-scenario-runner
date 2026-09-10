@@ -9,7 +9,7 @@
 from copy import deepcopy
 import json
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 
 TOPOLOGY_CONFIG_PATH = (
@@ -160,17 +160,21 @@ def _spawn_point(settings):
         )
 
 
-def apply_scenario_topology(
-    case: Dict[str, Any], topology_path: Path = TOPOLOGY_CONFIG_PATH
-) -> Dict[str, Any]:
-    """Add ROS 2 topology allocations to one scenario."""
+def _apply_vehicle_topology(
+    vehicles: List[Dict[str, Any]],
+    topology: ScenarioTopologyAllocator,
+    data_output: Mapping[str, Any],
+) -> None:
+    """Add network and runtime settings to Platform and Messenger vehicles.
 
-    result = deepcopy(case)
-    env_settings = result["env_settings"]
-    vehicles = env_settings.get("vehicles", [])
-    data_output = _data_output(result.get("data_output"))
-    result["data_output"] = data_output
-    topology = ScenarioTopologyAllocator(load_topology_config(topology_path))
+    Args:
+        vehicles:       Vehicle entries from ``env_settings.vehicles``. Each entry is
+                        updated in place.
+        topology:       Allocator used to assign component-specific networks and
+                        hostnames.
+        data_output:    Resolved scenario output settings used to configure log
+                        locations.
+    """
 
     vehicle_indexes = {"platform": 0, "messenger": 0}
     for vehicle in vehicles:
@@ -211,7 +215,25 @@ def apply_scenario_topology(
                 "MESSENGER_ROUTE_ROOT", f"{messenger_root}/routes"
             )
             settings.setdefault("RMW_IMPLEMENTATION", "rmw_cyclonedds_cpp")
-    for index, street in enumerate(env_settings.get("streets", []), 1):
+
+
+def _apply_street_topology(
+    streets: List[Dict[str, Any]],
+    topology: ScenarioTopologyAllocator,
+    data_output: Mapping[str, Any],
+) -> None:
+    """Add network and runtime settings to Street/V2X Hub instances.
+
+    Args:
+        streets:        Street entries from ``env_settings.streets``. Each entry is
+                        updated in place.
+        topology:       Allocator used to assign Street networks and hostnames.
+        data_output:    Resolved scenario output settings used to configure the
+                        V2X Hub log location.
+
+    """
+
+    for index, street in enumerate(streets, 1):
         settings = street["settings"]
         allocation = topology.allocate_street(
             index, bool((settings.get("EVC") or {}).get("enable", False))
@@ -241,7 +263,21 @@ def apply_scenario_topology(
             }
         )
 
-    cdasim = env_settings["cdasim"]
+
+def _apply_cdasim_topology(
+    cdasim: Dict[str, Any],
+    topology: ScenarioTopologyAllocator,
+    data_output: Mapping[str, Any],
+) -> None:
+    """Add shared topology and log settings to the CDASim entry.
+
+    Args:
+        cdasim:         The required ``env_settings.cdasim`` entry, updated in place.
+        topology:       Allocator containing the shared service allocations.
+        data_output:    Resolved scenario output settings used to configure the
+                        CDASim log location.
+    """
+
     cdasim["settings"].update(
         {
             "CDASIM_LOG_ROOT": data_output["collect"]["mosaic_logs"],
@@ -249,21 +285,59 @@ def apply_scenario_topology(
         }
     )
 
-    carma_cloud = env_settings.get("carma_cloud")
-    if carma_cloud:
-        cloud_settings = carma_cloud.setdefault("settings", {})
-        cloud_settings.setdefault(
-            "CARMA_CLOUD_WORK_ROOT",
-            "/opt/carma-simulation/carma-cloud/work",
-        )
-        cloud_settings.update(
-            {
-                "CARMA_CLOUD_LOG_ROOT": data_output["collect"][
-                    "carmacloud_logs"
-                ],
-                **topology.core,
-            }
-        )
+
+def _apply_cloud_topology(
+    carma_cloud: Optional[Dict[str, Any]],
+    topology: ScenarioTopologyAllocator,
+    data_output: Mapping[str, Any],
+) -> None:
+    """Add shared topology and log settings to an optional Cloud entry.
+
+    Args:
+        carma_cloud:    The optional ``env_settings.carma_cloud`` entry, updated
+                        in place when present.
+        topology:       Allocator containing the shared service allocations.
+        data_output:    Resolved scenario output settings used to configure the
+                        CARMA Cloud log location.
+    """
+
+    if not carma_cloud:
+        return
+
+    cloud_settings = carma_cloud.setdefault("settings", {})
+    cloud_settings.setdefault(
+        "CARMA_CLOUD_WORK_ROOT",
+        "/opt/carma-simulation/carma-cloud/work",
+    )
+    cloud_settings.update(
+        {
+            "CARMA_CLOUD_LOG_ROOT": data_output["collect"]["carmacloud_logs"],
+            **topology.core,
+        }
+    )
+
+
+def apply_scenario_topology(
+    case: Dict[str, Any], topology_path: Path = TOPOLOGY_CONFIG_PATH
+) -> Dict[str, Any]:
+    """Add ROS 2 topology allocations to one scenario."""
+
+    result = deepcopy(case)
+    env_settings = result["env_settings"]
+    data_output = _data_output(result.get("data_output"))
+    result["data_output"] = data_output
+    topology = ScenarioTopologyAllocator(load_topology_config(topology_path))
+
+    _apply_vehicle_topology(
+        env_settings.get("vehicles", []), topology, data_output
+    )
+    _apply_street_topology(
+        env_settings.get("streets", []), topology, data_output
+    )
+    _apply_cdasim_topology(env_settings["cdasim"], topology, data_output)
+    _apply_cloud_topology(
+        env_settings.get("carma_cloud"), topology, data_output
+    )
 
     env_settings["runner_networks"] = topology.networks
     return result

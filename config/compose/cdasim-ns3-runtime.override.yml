@@ -1,0 +1,7 @@
+services:
+  cdasim:
+    volumes:
+      - type: bind
+        source: "${CDASIM_RUNTIME_FILE:?CDASIM_RUNTIME_FILE must point to runtime.json}"
+        target: /opt/carma-simulation/etc/runtime.json
+        read_only: true

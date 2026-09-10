@@ -12,13 +12,24 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-import yaml
+import json
 import os
 import re
+import shlex
 import subprocess
-from jinja2 import Template
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
+import yaml
+from jinja2 import Template
+
+
+CDASIM_RUNTIME_TEMPLATE_PATH = (
+    Path(__file__).resolve().parent
+    / "config"
+    / "cdasim"
+    / "runtime.template.json"
+)
 
 
 class ScenarioGenerator:
@@ -40,6 +51,8 @@ class ScenarioGenerator:
         "platform": "platform_ros1",
         "msger_roscore": "messenger_roscore",
         "msger_ros1_bridge": "messenger_ros1_bridge",
+        "v2x_ros_driver": "v2x-ros-driver",
+        "messenger_v2x_ros_driver": "messenger-v2x-ros-driver",
     }
 
     def __init__(
@@ -109,6 +122,71 @@ class ScenarioGenerator:
         env_path.write_text(content)
         print(f"Generated {env_path}")
         return str(env_path)
+
+    def _generate_cdasim_runtime_with_ns3_image(
+        self, cdasim: Dict[str, Any]
+    ) -> str:
+        """Create a runtime.json with the configured NS-3 federate image.
+
+        Args:
+            cdasim: The CDASim deployment entry from ``env_settings``. Its
+                ``settings`` mapping must define ``NS3_FEDERATE_IMAGE``.
+
+        Returns:
+            The absolute path to ``tmp/cdasim-runtime.json``. The same path is
+            added to the CDASim settings as ``CDASIM_RUNTIME_FILE`` for the
+            runtime Compose override.
+
+        Raises:
+            FileNotFoundError: If the repository runtime template is missing.
+            ValueError: If ``settings`` is not a mapping,
+                ``NS3_FEDERATE_IMAGE`` is empty, the template does not contain
+                a ``federates`` list, or it does not contain exactly one
+                federate whose ``id`` is ``ns3``.
+            json.JSONDecodeError: If the runtime template is not valid JSON.
+
+        Example:
+            With ``NS3_FEDERATE_IMAGE`` set to
+            ``usdotfhwastoldev/ns3-federate:develop-dsrc``, this method writes a
+            generated runtime file containing that value in the NS-3
+            federate's ``dockerImage`` field.
+        """
+
+        settings = cdasim.get("settings")
+        if not isinstance(settings, dict):
+            raise ValueError("CDASim settings must be a mapping")
+        ns3_image = settings.get("NS3_FEDERATE_IMAGE")
+        if not isinstance(ns3_image, str) or not ns3_image.strip():
+            raise ValueError("NS3_FEDERATE_IMAGE must be a non-empty string")
+
+        with CDASIM_RUNTIME_TEMPLATE_PATH.open(
+            "r", encoding="utf-8"
+        ) as runtime_template:
+            runtime_config = json.load(runtime_template)
+
+        federates = runtime_config.get("federates")
+        if not isinstance(federates, list):
+            raise ValueError("CDASim runtime template has no federates list")
+
+        ns3_federates = [
+            federate
+            for federate in federates
+            if isinstance(federate, dict) and federate.get("id") == "ns3"
+        ]
+        if len(ns3_federates) != 1:
+            raise ValueError(
+                "CDASim runtime template must contain exactly one ns3 federate"
+            )
+
+        ns3_federates[0]["dockerImage"] = ns3_image.strip()
+        runtime_path = self.tmp_dir / "cdasim-runtime.json"
+        runtime_path.write_text(
+            json.dumps(runtime_config, indent=4) + "\n",
+            encoding="utf-8",
+        )
+        settings["CDASIM_RUNTIME_FILE"] = str(runtime_path)
+        print(f"Generated {runtime_path}")
+        return str(runtime_path)
 
     # --------------------------------------------------------------------- #
     # 3. Extract docker-compose.yml (once per project)
@@ -294,8 +372,26 @@ class ScenarioGenerator:
         return str(path.resolve())
 
     def _base_compose(self, component: Dict, project_name: str) -> str:
+        """ Resolve the base docker compose file for a component. If COMPOSE_FILE is set,
+        will attempt to resolve file path or pull OCI artifact. If not, will attempt to 
+        extract docker compose from CONFIG_IMAGE_FULL docker image using CONFIG_COMPOSE_PATH
+
+        Args:
+            component (Dict): The component configuration dictionary.
+
+        Returns:
+            str: Resolved path for docker compose file or OCI artifact reference
+
+        """
         if component.get('COMPOSE_FILE'):
-            return self._resolve_compose_path(component['COMPOSE_FILE'])
+            compose_file_path = component['COMPOSE_FILE'];
+            # Support OCI docker compose artifact and file path resolution
+            if compose_file_path.startswith('oci://'):
+                return compose_file_path
+            else:
+                # Return absolute file path for compose file from relative path.
+                return self._resolve_compose_path(compose_file_path)
+        # Extract docker compose from config image if COMPOSE_FILE is not set
         return self.extract_compose_from_image(
             component.get('CONFIG_IMAGE_FULL'),
             project_name,
@@ -447,7 +543,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "messenger_v2x_ros_driver": {
+                        "messenger-v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
@@ -489,7 +585,7 @@ class ScenarioGenerator:
             yaml.safe_dump(
                 {
                     "services": {
-                        "v2x_ros_driver": {
+                        "v2x-ros-driver": {
                             "volumes": [
                                 {
                                     "type": "bind",
@@ -589,6 +685,7 @@ class ScenarioGenerator:
             'scenario': scenario,
             'networks': es.get('runner_networks', []),
             'config_containers': list(self._config_containers.values()),
+            'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
 
@@ -598,7 +695,7 @@ class ScenarioGenerator:
     def generate_start_script(self) -> str:
         with open(self.start_template, 'r') as f:
             tmpl = Template(f.read())
-        content = tmpl.render(**self.data)
+        content = tmpl.render(shell_quote=shlex.quote, **self.data)
 
         start_path = self.tmp_dir / "sim_start.sh"
         start_path.write_text(content)
@@ -628,6 +725,10 @@ class ScenarioGenerator:
             self.load_config()
 
         es = self.config['env_settings']
+
+        cdasim_settings = es['cdasim'].get('settings', {})
+        if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
+            self._generate_cdasim_runtime_with_ns3_image(es['cdasim'])
 
         # Generate .env files
         self.generate_env_file('.env.cdasim', es['cdasim'])
