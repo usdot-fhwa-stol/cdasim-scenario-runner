@@ -57,7 +57,7 @@ class ScenarioGenerator:
 
     def __init__(
         self,
-        config_path='config/parameters/parameter.yaml',
+        config_path='tmp/parameter.yaml',
         start_template='config/templates/sim_start_template.sh.j2',
         stop_template='config/templates/sim_stop_template.sh.j2',
         tmp_dir='tmp',

@@ -86,17 +86,17 @@ stage_map_file() {
 # Copy one vehicle route into the CARMA route directory when the target does
 # not already exist. Existing routes are intentionally left unchanged.
 # Usage: stage_route_file SOURCE_FILE TARGET_FILE ROUTE_NAME VEHICLE_NAME
-stage_route_file() {
+stage_resource_file() {
     local source_file="$1"
     local target_file="$2"
-    local route_name="$3"
-    local vehicle_name="$4"
+    local resource_name="$3"
+    local name="$4"
 
     if [ ! -f "$source_file" ]; then
-        echo "Error: $route_name route specified in parameters.yaml for vehicle $vehicle_name cannot be found at $source_file" >&2
+        echo "Error: $resource_name resource specified in parameters.yaml for component $name cannot be found at $source_file" >&2
         exit 1
     fi
-    if [ -e "$target_file" ]; then
+    if [ -e "$target_file"  ] && [ ! -d "$target_file" ]; then
         echo "Route already exists at $target_file; skipping copy."
         return
     fi
@@ -137,11 +137,24 @@ stage_map_file \
     {{ shell_quote(scenario_resources.map_file.name) }} \
     {{ shell_quote(scenario_resources.map_file.test_case) }}
 {% for route in scenario_resources.routes %}
-stage_route_file \
+stage_resource_file \
     {{ shell_quote(route.source) }} \
     {{ shell_quote(route.target) }} \
     {{ shell_quote(route.name) }} \
     {{ shell_quote(route.vehicle) }}
+{% endfor %}
+
+# Prepare Infrastructure Configuration
+{% for config in scenario_resources.infrastructure_configs %}
+echo "Installing infrastructure resource "
+prepare_host_directory {{ shell_quote(config.target) }}
+stage_resource_file  \
+    {{shell_quote(config.source) }} \
+    {{shell_quote(config.target)}} \
+    {{shell_quote(config.name) }} \
+    {{shell_quote(config.infrastructure)}}
+
+
 {% endfor %}
 
 #  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers

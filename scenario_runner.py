@@ -25,6 +25,7 @@ from scenario_topology import apply_scenario_topology
 
 
 CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
+INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
@@ -89,7 +90,7 @@ class ScenarioRunner:
         return source
 
     def _scenario_resources(self, case: dict, label: str) -> dict:
-        """Validate and describe the map and routes required by one test case.
+        """Validate and describe the resources required by one test case.
 
         Args:
             case: Test-case mapping from ``parameters.yaml``. It must contain a
@@ -98,16 +99,19 @@ class ScenarioRunner:
             label: Test-case label used to identify configuration errors.
 
         Returns:
-            A mapping containing one ``map_file`` staging description and a
-            deduplicated list of vehicle ``routes`` staging descriptions. Each
-            description contains source and destination paths plus identifying
-            information used by the generated start script.
+            A dictionary of resources required for a test case. Each resources should 
+            include :
+                source: source file to be used
+                target: path to target location of resource
+                name: a unique name for the resource
+            additionally each resource will either be associated with a vehicle, infrastructure instance, or test case.
+            
 
         Raises:
             ValueError: If ``MAP`` is missing or a configured name resolves
                 outside its allowed configuration directory.
-            FileNotFoundError: If the configured map or vehicle route does not
-                exist under ``config/maps`` or ``config/routes``.
+            FileNotFoundError: If the configured resource does not
+                exist under ``config/maps`` or ``config/routes`` or ``config/infrastrucure``.
 
         Example:
             ``resources = runner._scenario_resources(case, case["label"])``
@@ -158,6 +162,35 @@ class ScenarioRunner:
                     "vehicle": str(vehicle_name),
                 }
             )
+        # Return empty dictionary if no infrastructure instance are found
+        infrastructure_instances = case.get("env_settings", {}).get("streets")
+        infrastructure_configs = []
+        # If no infrastructure instances, replace with empty list to avoid for loop with non iterable.
+        for infra in infrastructure_instances or []:
+            settings = infra.get("settings")
+            infra_config = settings.get("INFRASTRUCTURE_CONFIG")
+            infra_name = infra.get("PROJECT_NAME")
+            infra_config_source = self._configured_file( 
+                INFRASTRUCTURE_CONFIG_DIRECTORY, infra_config , ".sql"
+            )
+            if not infra_config_source.is_file():
+                raise FileNotFoundError(
+                    f"{infra_config} configuration specified in parameters.yaml for "
+                    f" streets instance {infra_name} cannot be found in {infra_config_source}!" 
+                )
+            target_folder_name = "mysql_" + infra_name
+            infra_config_target = self.tmp_dir /  target_folder_name 
+            infrastructure_configs.append(
+                {
+                    "source": str(infra_config_source),
+                    "target": str(infra_config_target),
+                    "name": str(infra_config),
+                    "infrastructure": str(infra_name)
+                }
+            )
+
+
+
 
         return {
             "map_file": {
@@ -167,6 +200,7 @@ class ScenarioRunner:
                 "test_case": label,
             },
             "routes": routes,
+            "infrastructure_configs": infrastructure_configs
         }
 
     @staticmethod
@@ -253,8 +287,9 @@ class ScenarioRunner:
             shutil.rmtree(self.tmp_dir)
         self.tmp_dir.mkdir()
 
-        # 2. Write parameter.yaml to tmp/
-        param_path = self.tmp_dir / "parameter.yaml"
+        # 2. Write test case parameters to yaml file in tmp/
+        test_case_param_file_name = label+"_parameter.yaml"
+        param_path = self.tmp_dir / test_case_param_file_name
         with open(param_path, "w") as f:
             yaml.dump(
                 {
@@ -343,7 +378,6 @@ def parse_args():
         help="Generate environment and start/stop files without executing them",
     )
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
