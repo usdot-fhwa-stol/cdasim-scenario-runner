@@ -19,7 +19,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - "${CDASIM_LOG_ROOT}:/opt/carma-simulation/logs"
     group_add:
-      - "${DOCKER_SOCKET_GID:?DOCKER_SOCKET_GID must be set by Scenario Runner}"
+      - "${DOCKER_SOCKET_GID:-999}"
     deploy:
       resources:
         reservations:
