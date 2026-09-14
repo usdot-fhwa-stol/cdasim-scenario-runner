@@ -17,7 +17,7 @@ services:
       - /opt/carma-simulation/tmp:/opt/carma-simulation/tmp
       - /dev:/dev
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - "${CDASIM_LOG_ROOT}:/opt/carma-simulation/logs"
+      - "${CDASIM_LOG_ROOT:-/opt/carma-simulation/logs}:/opt/carma-simulation/logs"
     group_add:
       - "${DOCKER_SOCKET_GID:-999}"
     deploy:
