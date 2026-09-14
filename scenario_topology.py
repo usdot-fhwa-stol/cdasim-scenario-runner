@@ -238,10 +238,12 @@ def _apply_street_topology(
         allocation = topology.allocate_street(
             index, bool((settings.get("EVC") or {}).get("enable", False))
         )
+        label =  street["PROJECT_NAME"]
         settings.update(
             {
                 "STREET_ID": f"street_{index}",
                 "V2XHUB_VOLUME_PATH": "/opt/v2xhub",
+                "INIT_DB": f"./mysql_{label}",
                 "MYSQL_PASSWORD": "ChangeMe123!",
                 "V2XHUB_USER": "tester",
                 "V2XHUB_PASSWORD": "ChangeMe123!",
