@@ -10,7 +10,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: ../../docker-compose.yml
+        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -57,7 +57,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: ../../docker-compose.yml
+        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
