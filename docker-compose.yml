@@ -11,7 +11,7 @@ services:
       MOSAIC_DOCKER_NETWORK: "container:cdasim"
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: graphics,utility,compute
-      CARLA_RENDER_OFFSCREEN: ${CARLA_RENDER_OFFSCREEN:-true}
+      CARLA_RENDER_OFFSCREEN: ${CARLA_RENDER_OFFSCREEN:-false}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /opt/carma-simulation/tmp:/opt/carma-simulation/tmp
@@ -25,7 +25,7 @@ services:
         reservations:
           devices:
             - capabilities: [gpu]
-    command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO}"
+    command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO:-Town10}"
 
   carla-sensor-lib:
     image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/carla-sensor-lib:${CARLA_SENSOR_LIB_VERSION:-develop}"
@@ -54,6 +54,8 @@ services:
       - --carla-host=carla-server
       - "--host=0.0.0.0"
   econolite-virtual-controller:
+    # Using latest tag will always attempt to pull from remote ignoring any cli params.
+    # Will fail if no remote image exists
     image: usdotfhwastol/econolite-virtual-controller:save
     container_name: evc
     restart: always
