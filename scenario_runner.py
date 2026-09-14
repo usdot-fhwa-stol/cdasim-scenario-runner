@@ -168,29 +168,30 @@ class ScenarioRunner:
         # If no infrastructure instances, replace with empty list to avoid for loop with non iterable.
         for infra in infrastructure_instances or []:
             settings = infra.get("settings")
-            infra_config = settings.get("INFRASTRUCTURE_CONFIG")
+            # infra_config = settings.get("INFRASTRUCTURE_CONFIG")
             infra_name = infra.get("PROJECT_NAME")
-            infra_config_source = self._configured_file( 
-                INFRASTRUCTURE_CONFIG_DIRECTORY, infra_config , ".sql"
-            )
-            if not infra_config_source.is_file():
-                raise FileNotFoundError(
-                    f"{infra_config} configuration specified in parameters.yaml for "
-                    f" streets instance {infra_name} cannot be found in {infra_config_source}!" 
+
+            infrastructure_resources = settings.get("INFRASTRUCTURE_RESOURCES", {})
+            print(f"Infrastructure resources {infrastructure_resources}")
+            for resource_name, resource_value in infrastructure_resources.items():
+                source = self._configured_file( 
+                    INFRASTRUCTURE_CONFIG_DIRECTORY / resource_name, resource_value, ""
                 )
-            target_folder_name = "mysql_" + infra_name
-            infra_config_target = self.tmp_dir /  target_folder_name 
-            infrastructure_configs.append(
-                {
-                    "source": str(infra_config_source),
-                    "target": str(infra_config_target),
-                    "name": str(infra_config),
-                    "infrastructure": str(infra_name)
-                }
-            )
-
-
-
+                if not source.is_file():
+                                raise FileNotFoundError(
+                                    f"{resource_name} configuration specified in parameters.yaml for "
+                                    f" streets instance {infra_name} cannot be found in {source}!" 
+                                )
+                target_folder_name = resource_name + "_" + infra_name
+                target = self.tmp_dir / target_folder_name
+                infrastructure_configs.append(
+                    {
+                        "source": str(source),
+                        "target": str(target),
+                        "name": str(resource_name),
+                        "infrastructure": str(infra_name)
+                    }
+                )
 
         return {
             "map_file": {
