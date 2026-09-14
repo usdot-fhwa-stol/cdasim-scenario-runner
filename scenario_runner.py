@@ -285,6 +285,9 @@ class ScenarioRunner:
             )
             return None
 
+        print("Clearing source log directories...")
+        self.collector.clear_sources(case)
+
         try:
             # 4. Start
             print(f"Launching: {start_sh}")
@@ -311,7 +314,6 @@ class ScenarioRunner:
 
         print("Collecting data outputs...")
         case_dir = self.collector.collect(idx, case)
-        self.collector.clear_sources(case)
 
         # 7. ALWAYS clean tmp/
         shutil.rmtree(self.tmp_dir)
@@ -339,6 +341,9 @@ class ScenarioRunner:
                 print(f"Scenario {i} failed: {e}")
                 if not self.generate_only and self.tmp_dir.exists():
                     shutil.rmtree(self.tmp_dir)
+
+        if not self.generate_only:
+            self.collector.clear_sources(case)
 
         for case_dir, case in collected:
             print("Running data analysis...")

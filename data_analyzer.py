@@ -18,12 +18,7 @@ import subprocess
 
 class DataAnalyzer:
 
-    def __init__(
-        self,
-        scripts_dir: str = "../cdasim-config/cdasim_data_analysis_scripts",
-        image: str = "cdasim-data-analysis:latest"
-    ):
-        self.scripts_dir = Path(scripts_dir).resolve()
+    def __init__(self, image: str = "cdasim-data-analysis:latest"):
         self.image = image
 
     def analyze(self, case_dir: Path, case: dict):
@@ -54,24 +49,42 @@ class DataAnalyzer:
                 if not mcap_files:
                     print(f"No .mcap files found in {vehicle_dir}. Skipping mcap analysis.")
                 for mcap_file in mcap_files:
-                    self._run_mcap_analyzer(mcap_file, vehicle_name)
+                    self._run_mcap_analyzer(mcap_file, vehicle_name, case_dir)
 
             self._run_regression_analysis(rosbags, case_dir)
         else:
             print(f"No rosbags found in {case_dir}. Skipping mcap/control/regression analysis.")
 
     def _run_log_analyzer(self, log_dir: Path, vehicle_name: str, case_dir: Path):
-        script = self.scripts_dir / "cdasim_log_analyzer.py"
+        command = (
+            "source /opt/ros/humble/setup.bash && "
+            f"python3 /home/carma/cdasim_data_analysis_scripts/cdasim_log_analyzer.py "
+            f"{log_dir} --vehicle-name {vehicle_name}"
+        )
         subprocess.run(
-            ["python3", str(script), str(log_dir), "--vehicle-name", vehicle_name],
+            [
+                "docker", "run", "--rm",
+                "-v", f"{case_dir}:{case_dir}",
+                "-w", str(case_dir),
+                self.image,
+                "bash", "-c", command,
+            ],
             check=True,
-            cwd=case_dir,
         )
 
-    def _run_mcap_analyzer(self, mcap_file: Path, vehicle_name: str):
-        script = self.scripts_dir / "cdasim_mcap_analyzer.py"
+    def _run_mcap_analyzer(self, mcap_file: Path, vehicle_name: str, case_dir: Path):
+        command = (
+            "source /opt/ros/humble/setup.bash && "
+            f"python3 /home/carma/cdasim_data_analysis_scripts/cdasim_mcap_analyzer.py "
+            f"{mcap_file} --metric all --vehicle-name {vehicle_name}"
+        )
         result = subprocess.run(
-            ["python3", str(script), str(mcap_file), "--metric", "all", "--vehicle-name", vehicle_name]
+            [
+                "docker", "run", "--rm",
+                "-v", f"{case_dir}:{case_dir}",
+                self.image,
+                "bash", "-c", command,
+            ]
         )
         if result.returncode != 0:
             print(f"Mcap analysis reported issues for {mcap_file} (exit code {result.returncode}).")
