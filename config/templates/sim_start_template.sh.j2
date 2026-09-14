@@ -83,12 +83,15 @@ stage_map_file() {
     echo "Installed $map_name map as $target_file"
 }
 
-# Copy one vehicle route into the CARMA route directory when the target does
-# not already exist. Existing routes are intentionally left unchanged.
-# Usage: stage_route_file SOURCE_FILE TARGET_FILE ROUTE_NAME VEHICLE_NAME
+# Used to copy a resource file from the ./config source directory into
+# a specified target file path or directory path. 
+# Usage: start_resource_file SOURCE_FILE TARGET NAME COMPONENT_NAME
+# Note: All resources source_file and target need to be absolute paths
+#       If function detects that the target is a file path and it already exists
+#           it will not attempt to overwrite it.
 stage_resource_file() {
     local source_file="$1"
-    local target_file="$2"
+    local target="$2"
     local resource_name="$3"
     local name="$4"
 
@@ -96,13 +99,13 @@ stage_resource_file() {
         echo "Error: $resource_name resource specified in parameters.yaml for component $name cannot be found at $source_file" >&2
         exit 1
     fi
-    if [ -e "$target_file"  ] && [ ! -d "$target_file" ]; then
-        echo "Route already exists at $target_file; skipping copy."
+    if [ -e "$target"  ] && [ ! -d "$target" ]; then
+        echo "Target file already exists at $target; skipping copy."
         return
     fi
 
-    cp "$source_file" "$target_file"
-    echo "Installed $route_name route at $target_file"
+    cp "$source_file" "$target"
+    echo "Installed $name resource at $target"
 }
 
 # Validate the host Docker socket and export its group ID for Compose services
