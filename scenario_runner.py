@@ -346,7 +346,7 @@ class ScenarioRunner:
 
             # 5. Wait
             runtime = case.get("runtime_seconds", 60)
-            print(f"Running for {runtime} seconds...")
+            print(f"Running {label} for  {runtime} seconds...")
             time.sleep(runtime)
         except subprocess.CalledProcessError as e:
             print(f"Start script {start_sh} failed with error : {e}")

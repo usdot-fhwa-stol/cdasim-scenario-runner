@@ -243,7 +243,7 @@ def _apply_street_topology(
             {
                 "STREET_ID": f"street_{index}",
                 "V2XHUB_VOLUME_PATH": "/opt/v2xhub",
-                "INIT_DB": f"./mysql_{label}",
+                "INIT_DB": f"./v2xhub_db_init_{label}",
                 "MYSQL_PASSWORD": "ChangeMe123!",
                 "V2XHUB_USER": "tester",
                 "V2XHUB_PASSWORD": "ChangeMe123!",
