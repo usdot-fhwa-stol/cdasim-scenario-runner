@@ -260,6 +260,8 @@ def _apply_street_topology(
                 # For all external port set to zero. These configuration values are used to setup port mapping on host
                 # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
                 # find an open port on the host machine and use that.
+                "PHP_HTTP_EXTERNAL_PORT": 0,
+                "PHP_HTTPS_EXTERNAL_PORT": 0,
                 "MUST_SENSOR_PLUGIN_EXTERNAL_PORT": 0, 
                 "CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT": 0,
                 "CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT": 0,
