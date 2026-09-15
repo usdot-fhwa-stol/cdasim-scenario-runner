@@ -10,7 +10,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
-
+TMP_DIR = Path(__file__).resolve().parent / "tmp" 
 
 TOPOLOGY_CONFIG_PATH = (
     Path(__file__).resolve().parent
@@ -243,7 +243,7 @@ def _apply_street_topology(
             {
                 "STREET_ID": f"street_{index}",
                 "V2XHUB_VOLUME_PATH": "/opt/v2xhub",
-                "INIT_DB": f"./v2xhub_db_init_{label}",
+                "INIT_DB": f"{TMP_DIR}/v2xhub_db_init_{label}",
                 "MYSQL_PASSWORD": "ChangeMe123!",
                 "V2XHUB_USER": "tester",
                 "V2XHUB_PASSWORD": "ChangeMe123!",
@@ -255,6 +255,8 @@ def _apply_street_topology(
                 "SIM_V2X_PORT": 1517,
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
+                "V2XHUB_IP": "0.0.0.0",
+                "SIMULATION_MODE": "TRUE"
                 # For all external port set to zero. These configuration values are used to setup port mapping on host
                 # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
                 # find an open port on the host machine and use that.
@@ -276,7 +278,6 @@ def _apply_street_topology(
                 "INFRASTRUCTURE_IP": allocation[
                     "STREET_INFRASTRUCTURE_HOST"
                 ],
-                "V2XHUB_IP": allocation["V2XHUB_SIM_HOST"],
                 **allocation,
             }
         )

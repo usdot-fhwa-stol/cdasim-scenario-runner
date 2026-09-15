@@ -236,7 +236,6 @@ docker network create --driver {{ network.driver }}{% if network.subnet is defin
 docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_container.image }}" -c '{{ config_container.init_command }}'
 {% endfor %}
 
-current_dir=$(pwd)
 
 # Recreate Compose containers so they attach to the networks created for this
 # run instead of reusing stale container metadata from a previous interrupted
@@ -245,7 +244,7 @@ current_dir=$(pwd)
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
-               -p "{{ c.PROJECT_NAME }}" --project-directory $current_dir/tmp \
+               -p "{{ c.PROJECT_NAME }}" --project-directory "{{ c.project_directory }}" \
                up -d --yes --force-recreate 
 {% endfor %}
 
