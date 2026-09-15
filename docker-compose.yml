@@ -65,12 +65,12 @@ services:
       - DISPLAY=${DISPLAY}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ./evc_sumo/:/home/carma/src/resources/
+      - ./evc_sumo:/home/carma/src/resources
       - ./pyeos_db:/home/carma/shared_data
     depends_on:
       - cdasim
     command: >
-      bash -c "/home/carma/docker/start-evc.sh --traci-ip cdasim"
+      bash -c "/home/carma/docker/start_evc.sh --traci-ip cdasim"
 
 
 networks:

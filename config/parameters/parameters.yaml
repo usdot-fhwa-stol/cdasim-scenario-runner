@@ -149,7 +149,8 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_5678
             INFRASTRUCTURE_NAME: Intersection 2
-            INFRASTRUCTURE_CONFIG: default.localhost
+            INFRASTRUCTURE_RESOURCES: 
+              v2xhub_db_init: default.localhost.sql
             EVC:
               enable: false
               snmp_port: 5556
