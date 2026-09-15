@@ -58,4 +58,4 @@ jobs:
             type=ref,event=pr
       - name: Publish Docker Compose OCI artifact
         run: |
-          docker compose publish --with-env --yes ${{ steps.meta.outputs.tags }} 
+          docker compose publish --yes ${{ steps.meta.outputs.tags }} 

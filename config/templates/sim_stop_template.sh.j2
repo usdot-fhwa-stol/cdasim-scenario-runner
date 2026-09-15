@@ -95,7 +95,7 @@ if ! docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               down --remove-orphans; then
+               down --remove-orphans -v; then
     echo "Error: Compose cleanup failed for {{ c.PROJECT_NAME }}." >&2
     CLEANUP_FAILED=1
 fi

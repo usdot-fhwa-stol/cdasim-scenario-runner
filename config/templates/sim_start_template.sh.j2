@@ -16,7 +16,8 @@
 # Exit immediately when startup fails. ScenarioRunner owns the deployment
 # lifecycle and invokes the generated stop script from its finally block.
 set -e
-
+# For docker display connection
+xhost +local:docker
 # Create a host directory if needed and make its top-level directory writable.
 # Existing contents are not changed because logs from containers may be owned
 # by different users and do not need to be rewritten before each scenario.
@@ -82,26 +83,29 @@ stage_map_file() {
     echo "Installed $map_name map as $target_file"
 }
 
-# Copy one vehicle route into the CARMA route directory when the target does
-# not already exist. Existing routes are intentionally left unchanged.
-# Usage: stage_route_file SOURCE_FILE TARGET_FILE ROUTE_NAME VEHICLE_NAME
-stage_route_file() {
+# Used to copy a resource file from the ./config source directory into
+# a specified target file path or directory path. 
+# Usage: start_resource_file SOURCE_FILE TARGET NAME COMPONENT_NAME
+# Note: All resources source_file and target need to be absolute paths
+#       If function detects that the target is a file path and it already exists
+#           it will not attempt to overwrite it.
+stage_resource_file() {
     local source_file="$1"
-    local target_file="$2"
-    local route_name="$3"
-    local vehicle_name="$4"
+    local target="$2"
+    local resource_name="$3"
+    local name="$4"
 
     if [ ! -f "$source_file" ]; then
-        echo "Error: $route_name route specified in parameters.yaml for vehicle $vehicle_name cannot be found at $source_file" >&2
+        echo "Error: $resource_name resource specified in parameters.yaml for component $name cannot be found at $source_file" >&2
         exit 1
     fi
-    if [ -e "$target_file" ]; then
-        echo "Route already exists at $target_file; skipping copy."
+    if [ -e "$target"  ] && [ ! -d "$target" ]; then
+        echo "Target file already exists at $target; skipping copy."
         return
     fi
 
-    cp "$source_file" "$target_file"
-    echo "Installed $route_name route at $target_file"
+    cp "$source_file" "$target"
+    echo "Installed $name resource at $target"
 }
 
 # Validate the host Docker socket and export its group ID for Compose services
@@ -126,6 +130,9 @@ prepare_host_directory "/opt/carma-simulation/logs"
 prepare_host_directory "/opt/carma/logs"
 prepare_host_directory "/opt/carma/maps"
 prepare_host_directory "/opt/carma/routes"
+prepare_host_directory "/opt/v2xhub/download" # TODO: Remove 
+prepare_host_directory "/opt/v2xhub/ssl" # TODO: Remove 
+prepare_host_directory "/opt/v2xhub/logs"
 
 stage_map_file \
     {{ shell_quote(scenario_resources.map_file.source) }} \
@@ -133,11 +140,37 @@ stage_map_file \
     {{ shell_quote(scenario_resources.map_file.name) }} \
     {{ shell_quote(scenario_resources.map_file.test_case) }}
 {% for route in scenario_resources.routes %}
-stage_route_file \
+stage_resource_file \
     {{ shell_quote(route.source) }} \
     {{ shell_quote(route.target) }} \
     {{ shell_quote(route.name) }} \
     {{ shell_quote(route.vehicle) }}
+{% endfor %}
+
+# Prepare CDA Sim Configuration
+echo "Installing CDA Sim resources "
+{% for config in scenario_resources.cdasim_configs %}
+prepare_host_directory {{ shell_quote(config.target) }}
+stage_resource_file  \
+    {{shell_quote(config.source) }} \
+    {{shell_quote(config.target)}} \
+    {{shell_quote(config.name) }} \
+    {{shell_quote(config.infrastructure)}}
+
+
+{% endfor %}
+
+# Prepare Infrastructure Configuration
+echo "Installing Infrastructure Resources "
+{% for config in scenario_resources.infrastructure_configs %}
+prepare_host_directory {{ shell_quote(config.target) }}
+stage_resource_file  \
+    {{shell_quote(config.source) }} \
+    {{shell_quote(config.target)}} \
+    {{shell_quote(config.name) }} \
+    {{shell_quote(config.infrastructure)}}
+
+
 {% endfor %}
 
 #  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
@@ -203,6 +236,7 @@ docker network create --driver {{ network.driver }}{% if network.subnet is defin
 docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_container.image }}" -c '{{ config_container.init_command }}'
 {% endfor %}
 
+
 # Recreate Compose containers so they attach to the networks created for this
 # run instead of reusing stale container metadata from a previous interrupted
 # run whose external networks may have been deleted and recreated.
@@ -210,8 +244,8 @@ docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_conta
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
-               -p "{{ c.PROJECT_NAME }}" \
-               up -d --force-recreate
+               -p "{{ c.PROJECT_NAME }}" --project-directory "{{ c.project_directory }}" \
+               up -d --yes --force-recreate 
 {% endfor %}
 
 echo "Scenario started."

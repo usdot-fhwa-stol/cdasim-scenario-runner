@@ -25,8 +25,10 @@ from scenario_topology import apply_scenario_topology
 
 
 CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
+INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
+CDASIM_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "cdasim"
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
 # Shell convention: an exit caused by signal N uses status 128 + N. SIGINT,
@@ -89,7 +91,7 @@ class ScenarioRunner:
         return source
 
     def _scenario_resources(self, case: dict, label: str) -> dict:
-        """Validate and describe the map and routes required by one test case.
+        """Validate and describe the resources required by one test case.
 
         Args:
             case: Test-case mapping from ``parameters.yaml``. It must contain a
@@ -98,16 +100,19 @@ class ScenarioRunner:
             label: Test-case label used to identify configuration errors.
 
         Returns:
-            A mapping containing one ``map_file`` staging description and a
-            deduplicated list of vehicle ``routes`` staging descriptions. Each
-            description contains source and destination paths plus identifying
-            information used by the generated start script.
+            A dictionary of resources required for a test case. Each resources should 
+            include :
+                source: source file to be used
+                target: path to target location of resource
+                name: a unique name for the resource
+            additionally each resource will either be associated with a vehicle, infrastructure instance, or test case.
+            
 
         Raises:
             ValueError: If ``MAP`` is missing or a configured name resolves
                 outside its allowed configuration directory.
-            FileNotFoundError: If the configured map or vehicle route does not
-                exist under ``config/maps`` or ``config/routes``.
+            FileNotFoundError: If the configured resource does not
+                exist under ``config/maps`` or ``config/routes`` or ``config/infrastrucure``.
 
         Example:
             ``resources = runner._scenario_resources(case, case["label"])``
@@ -126,7 +131,27 @@ class ScenarioRunner:
                 f"{map_name} map specified in parameters.yaml for test case "
                 f"{label} cannot be found at {map_source}"
             )
-
+        # Setup CDA Sim Resources
+        cdasim_configs = []
+        cdasim_resources  = case.get("env_settings",{}).get("cdasim",{}).get("settings",{}).get("CDASIM_RESOURCES",{})
+        for resource_name, resource_value in cdasim_resources.items():
+            source = self._configured_file( 
+                CDASIM_CONFIG_DIRECTORY / resource_name, resource_value, ""
+            )
+            if not source.is_file():
+                            raise FileNotFoundError(
+                                f"{resource_name} configuration specified in parameters.yaml for "
+                                f" test case {label} cannot be found in {source}!" 
+                            )
+            target = self.tmp_dir / resource_name
+            cdasim_configs.append(
+                {
+                    "source": str(source),
+                    "target": str(target),
+                    "name": str(resource_name),
+                    "test_case": str(label)
+                }
+            ) 
         routes = []
         route_targets = set()
         vehicles = case.get("env_settings", {}).get("vehicles", [])
@@ -158,6 +183,35 @@ class ScenarioRunner:
                     "vehicle": str(vehicle_name),
                 }
             )
+        # Return empty dictionary if no infrastructure instance are found
+        infrastructure_instances = case.get("env_settings", {}).get("streets")
+        infrastructure_configs = []
+        # If no infrastructure instances, replace with empty list to avoid for loop with non iterable.
+        for infra in infrastructure_instances or []:
+            settings = infra.get("settings")
+            # infra_config = settings.get("INFRASTRUCTURE_CONFIG")
+            infra_name = infra.get("PROJECT_NAME")
+
+            infrastructure_resources = settings.get("INFRASTRUCTURE_RESOURCES", {})
+            for resource_name, resource_value in infrastructure_resources.items():
+                source = self._configured_file( 
+                    INFRASTRUCTURE_CONFIG_DIRECTORY / resource_name, resource_value, ""
+                )
+                if not source.is_file():
+                                raise FileNotFoundError(
+                                    f"{resource_name} configuration specified in parameters.yaml for "
+                                    f" streets instance {infra_name} cannot be found in {source}!" 
+                                )
+                target_folder_name = resource_name + "_" + infra_name
+                target = self.tmp_dir / target_folder_name
+                infrastructure_configs.append(
+                    {
+                        "source": str(source),
+                        "target": str(target),
+                        "name": str(resource_name),
+                        "infrastructure": str(infra_name)
+                    }
+                )
 
         return {
             "map_file": {
@@ -167,6 +221,8 @@ class ScenarioRunner:
                 "test_case": label,
             },
             "routes": routes,
+            "infrastructure_configs": infrastructure_configs,
+            "cdasim_configs": cdasim_configs
         }
 
     @staticmethod
@@ -253,8 +309,9 @@ class ScenarioRunner:
             shutil.rmtree(self.tmp_dir)
         self.tmp_dir.mkdir()
 
-        # 2. Write parameter.yaml to tmp/
-        param_path = self.tmp_dir / "parameter.yaml"
+        # 2. Write test case parameters to yaml file in tmp/
+        test_case_param_file_name = label+"_parameter.yaml"
+        param_path = self.tmp_dir / test_case_param_file_name
         with open(param_path, "w") as f:
             yaml.dump(
                 {
@@ -289,8 +346,10 @@ class ScenarioRunner:
 
             # 5. Wait
             runtime = case.get("runtime_seconds", 60)
-            print(f"Running for {runtime} seconds...")
+            print(f"Running {label} for  {runtime} seconds...")
             time.sleep(runtime)
+        except subprocess.CalledProcessError as e:
+            print(f"Start script {start_sh} failed with error : {e}")
         except KeyboardInterrupt:
             print("Interrupt received; stopping the scenario...")
             raise
@@ -341,7 +400,6 @@ def parse_args():
         help="Generate environment and start/stop files without executing them",
     )
     return parser.parse_args()
-
 
 if __name__ == "__main__":
     args = parse_args()
