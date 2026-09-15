@@ -28,6 +28,7 @@ CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
 INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
+CDASIM_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "cdasim"
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
 # Shell convention: an exit caused by signal N uses status 128 + N. SIGINT,
@@ -130,7 +131,27 @@ class ScenarioRunner:
                 f"{map_name} map specified in parameters.yaml for test case "
                 f"{label} cannot be found at {map_source}"
             )
-
+        # Setup CDA Sim Resources
+        cdasim_configs = []
+        cdasim_resources  = case.get("env_settings",{}).get("cdasim",{}).get("settings",{}).get("CDASIM_RESOURCES",{})
+        for resource_name, resource_value in cdasim_resources.items():
+            source = self._configured_file( 
+                CDASIM_CONFIG_DIRECTORY / resource_name, resource_value, ""
+            )
+            if not source.is_file():
+                            raise FileNotFoundError(
+                                f"{resource_name} configuration specified in parameters.yaml for "
+                                f" test case {label} cannot be found in {source}!" 
+                            )
+            target = self.tmp_dir / resource_name
+            cdasim_configs.append(
+                {
+                    "source": str(source),
+                    "target": str(target),
+                    "name": str(resource_name),
+                    "test_case": str(label)
+                }
+            ) 
         routes = []
         route_targets = set()
         vehicles = case.get("env_settings", {}).get("vehicles", [])
@@ -172,7 +193,6 @@ class ScenarioRunner:
             infra_name = infra.get("PROJECT_NAME")
 
             infrastructure_resources = settings.get("INFRASTRUCTURE_RESOURCES", {})
-            print(f"Infrastructure resources {infrastructure_resources}")
             for resource_name, resource_value in infrastructure_resources.items():
                 source = self._configured_file( 
                     INFRASTRUCTURE_CONFIG_DIRECTORY / resource_name, resource_value, ""
@@ -201,7 +221,8 @@ class ScenarioRunner:
                 "test_case": label,
             },
             "routes": routes,
-            "infrastructure_configs": infrastructure_configs
+            "infrastructure_configs": infrastructure_configs,
+            "cdasim_configs": cdasim_configs
         }
 
     @staticmethod

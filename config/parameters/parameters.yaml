@@ -68,6 +68,9 @@ test_cases:
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          CDASIM_RESOURCES:
+            pyeos_db: .pyeos.db
+            evc_sumo: evc_sumo_cfg.json
 
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
@@ -123,7 +126,8 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
-            INFRASTRUCTURE_CONFIG: default.localhost
+            INFRASTRUCTURE_RESOURCES: 
+              v2xhub_db_init: default.localhost.sql
             EVC:
               enable: false
               snmp_port: 5555

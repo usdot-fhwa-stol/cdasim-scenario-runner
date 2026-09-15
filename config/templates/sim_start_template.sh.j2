@@ -147,9 +147,22 @@ stage_resource_file \
     {{ shell_quote(route.vehicle) }}
 {% endfor %}
 
+# Prepare CDA Sim Configuration
+echo "Installing CDA Sim resources "
+{% for config in scenario_resources.cdasim_configs %}
+prepare_host_directory {{ shell_quote(config.target) }}
+stage_resource_file  \
+    {{shell_quote(config.source) }} \
+    {{shell_quote(config.target)}} \
+    {{shell_quote(config.name) }} \
+    {{shell_quote(config.infrastructure)}}
+
+
+{% endfor %}
+
 # Prepare Infrastructure Configuration
+echo "Installing Infrastructure Resources "
 {% for config in scenario_resources.infrastructure_configs %}
-echo "Installing infrastructure resource "
 prepare_host_directory {{ shell_quote(config.target) }}
 stage_resource_file  \
     {{shell_quote(config.source) }} \
