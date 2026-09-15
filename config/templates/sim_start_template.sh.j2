@@ -245,7 +245,7 @@ current_dir=$(pwd)
 docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
-               -p "{{ c.PROJECT_NAME }}" --project-directory current_dir \
+               -p "{{ c.PROJECT_NAME }}" --project-directory $current_dir/tmp \
                up -d --yes --force-recreate 
 {% endfor %}
 
