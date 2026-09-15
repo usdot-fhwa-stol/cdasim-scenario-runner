@@ -92,7 +92,7 @@ configure those entries:
 | **`RUNTIME_IMAGE_ORG`** | The Docker organization or namespace that owns the runtime images (e.g., `usdotfhwastol`). |
 | **`RUNTIME_IMAGE_TAG`** | The version tag for the runtime image. Defines which CARMA or CDASim build version to execute. |
 | **`CONFIG_IMAGE_FULL`** | The full image name (including tag) of the configuration image containing the deployment's embedded `docker-compose.yml`. |
-| **`COMPOSE_FILE`** | A repository-local base Compose file used instead of `CONFIG_IMAGE_FULL`. |
+| **`COMPOSE_FILE`** | A repository-local base Compose file or a docker compose OC artifact used instead of `CONFIG_IMAGE_FULL`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
 
 `START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
@@ -167,6 +167,14 @@ Scenario 1 complete.
 ```
 project_root/
 ├── config/
+|   ├── cdasim/
+│   │   ├── evc_sumo/
+|   |   |       └── evc_sumo_cfg.json
+│   │   ├── pyeos_db/
+|   |   |       └── .pyeos.db
+|   ├── infrastructure/
+│   │   ├── v2xhub_db_init/
+|   |   |       └── default.localhost.sql
 │   ├── maps/
 │   │   └── Town10.osm
 │   ├── routes/
