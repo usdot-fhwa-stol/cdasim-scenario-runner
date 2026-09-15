@@ -256,7 +256,7 @@ def _apply_street_topology(
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
                 "V2XHUB_IP": "0.0.0.0",
-                "SIMULATION_MODE": "TRUE"
+                "SIMULATION_MODE": "TRUE",
                 # For all external port set to zero. These configuration values are used to setup port mapping on host
                 # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
                 # find an open port on the host machine and use that.
