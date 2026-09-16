@@ -12,10 +12,17 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
+from datetime import datetime, timezone
 from pathlib import Path
 import shutil
 
+
 class DataCollector:
+
+    def __init__(self):
+        self.run_id = datetime.now(timezone.utc).strftime(
+            "%Y%m%dT%H%M%S_%fZ"
+        )
 
     def latest_subdir(self, base: Path):
         if not base.exists():
@@ -33,7 +40,7 @@ class DataCollector:
         out_dir.mkdir(parents=True, exist_ok=True)
 
         label = config.get("label", f"scenario_{index}")
-        case_dir = out_dir / data_output.get(
+        case_dir = out_dir / self.run_id / data_output.get(
             "rename_format", "{label}"
         ).format(index=index, label=label)
         case_dir.mkdir(parents=True, exist_ok=True)
