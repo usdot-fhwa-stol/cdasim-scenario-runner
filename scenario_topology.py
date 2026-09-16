@@ -10,7 +10,7 @@ from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
-
+TMP_DIR = Path(__file__).resolve().parent / "tmp" 
 
 TOPOLOGY_CONFIG_PATH = (
     Path(__file__).resolve().parent
@@ -238,9 +238,15 @@ def _apply_street_topology(
         allocation = topology.allocate_street(
             index, bool((settings.get("EVC") or {}).get("enable", False))
         )
+        label =  street["PROJECT_NAME"]
         settings.update(
             {
                 "STREET_ID": f"street_{index}",
+                "V2XHUB_VOLUME_PATH": "/opt/v2xhub",
+                "INIT_DB": f"{TMP_DIR}/v2xhub_db_init_{label}",
+                "MYSQL_PASSWORD": "ChangeMe123!",
+                "V2XHUB_USER": "tester",
+                "V2XHUB_PASSWORD": "ChangeMe123!",
                 "SIMULATION_MODE": True,
                 "SIMULATION_HOST": topology.core["CDASIM_SIM_HOST"],
                 "SIMULATION_IP": topology.core["CDASIM_SIM_HOST"],
@@ -249,6 +255,22 @@ def _apply_street_topology(
                 "SIM_V2X_PORT": 1517,
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
+                "V2XHUB_IP": "0.0.0.0",
+                "SIMULATION_MODE": "TRUE",
+                # For all external port set to zero. These configuration values are used to setup port mapping on host
+                # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
+                # find an open port on the host machine and use that.
+                "PHP_HTTP_EXTERNAL_PORT": 0,
+                "PHP_HTTPS_EXTERNAL_PORT": 0,
+                "MUST_SENSOR_PLUGIN_EXTERNAL_PORT": 0, 
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT": 0,
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT": 0,
+                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT": 0,
+                "CARMA_CLOUD_EXTERNAL_PORT": 0,
+                "TIM_PLUGIN_EXTERNAL_PORT": 0,
+                "SPAT_PLUGIN_EXTERNAL_PORT": 0,
+                "MESSAGE_RECEIVER_PLUGIN_EXTERNAL_PORT": 0,
+                "COMMAND_PLUGIN_EXTERNAL_PORT": 0,
                 "V2XHUB_LOG_ROOT": data_output["collect"]["v2xhub_logs"],
                 "SIM_NETWORK_NAME": topology.core["SIM_NETWORK_NAME"],
                 "INFRASTRUCTURE_HOST": allocation[
@@ -258,7 +280,6 @@ def _apply_street_topology(
                 "INFRASTRUCTURE_IP": allocation[
                     "STREET_INFRASTRUCTURE_HOST"
                 ],
-                "V2XHUB_IP": allocation["V2XHUB_SIM_HOST"],
                 **allocation,
             }
         )

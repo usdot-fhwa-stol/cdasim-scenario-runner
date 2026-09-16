@@ -57,7 +57,7 @@ class ScenarioGenerator:
 
     def __init__(
         self,
-        config_path='config/parameters/parameter.yaml',
+        config_path='tmp/parameter.yaml',
         start_template='config/templates/sim_start_template.sh.j2',
         stop_template='config/templates/sim_stop_template.sh.j2',
         tmp_dir='tmp',
@@ -619,13 +619,15 @@ class ScenarioGenerator:
         if private_network_override:
             compose_files.append(private_network_override)
         env_file = str(self.tmp_dir / '.env.cdasim')
+        # 
         scenario.append({
             'PROJECT_NAME': cd['PROJECT_NAME'],
             'compose_file': compose_files[0],
             'compose_files': compose_files,
             'env_file': env_file,
             'platform_net': None,
-            'street_net': None
+            'street_net': None,
+            'project_directory': self.tmp_dir
         })
 
         # CARMA Cloud
@@ -644,7 +646,8 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': None,
-                'street_net': None
+                'street_net': None,
+                'project_directory': self.tmp_dir
             })
 
         # Vehicles
@@ -665,7 +668,8 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': f"{v['PROJECT_NAME']}_platform_net",
-                'street_net': None
+                'street_net': None,
+                'project_directory': f"{self.tmp_dir}/config-{v['PROJECT_NAME']}"
             })
 
         # Streets
@@ -678,7 +682,8 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': None,
-                'street_net': f"{s['PROJECT_NAME']}_street_net"
+                'street_net': f"{s['PROJECT_NAME']}_street_net",
+                'project_directory': f"{self.tmp_dir}/"
             })
 
         return {
