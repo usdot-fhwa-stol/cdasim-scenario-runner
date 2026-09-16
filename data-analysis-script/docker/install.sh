@@ -33,6 +33,18 @@ python3 -m pip install --no-cache-dir \
 echo "Sourcing ROS 2 environment..."
 source /opt/ros/humble/setup.bash
 
+# Clone the CDASim data analysis scripts
+echo "Cloning cdasim-config (develop branch)..."
+git clone --depth 1 --branch develop \
+    https://github.com/usdot-fhwa-stol/cdasim-config.git ~/cdasim-config
+ln -sf ~/cdasim-config/cdasim_data_analysis_scripts ~/cdasim_data_analysis_scripts
+
+# Clone the CARMA Platform analysis scripts
+echo "Cloning carma-analytics-fotda (develop branch)..."
+git clone --depth 1 --branch develop \
+    https://github.com/usdot-fhwa-stol/carma-analytics-fotda.git ~/carma-analytics-fotda
+ln -sf ~/carma-analytics-fotda/src/carma-platform ~/carma-platform-scripts
+
 # Clone ROS 2 message packages
 echo "Cloning carma-msgs (develop branch)..."
 mkdir -p ~/msgs_ws/src

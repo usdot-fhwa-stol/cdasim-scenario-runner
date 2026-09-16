@@ -28,8 +28,6 @@ WORKDIR /home/carma
 # Workspace Setup
 # ================================
 COPY --chown=carma:carma cdasim-scenario-runner/data-analysis-script/docker ./docker
-COPY --chown=carma:carma cdasim-config/cdasim_data_analysis_scripts ./cdasim_data_analysis_scripts
-COPY --chown=carma:carma carma-analytics-fotda/src/carma-platform ./carma-platform-scripts
 
 # Build carma_planning_msgs
 RUN /home/carma/docker/install.sh

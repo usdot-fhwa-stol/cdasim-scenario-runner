@@ -345,9 +345,20 @@ class ScenarioRunner:
         if not self.generate_only:
             self.collector.clear_sources(case)
 
+        analysis_failures = {}
         for case_dir, case in collected:
             print("Running data analysis...")
-            self.analyzer.analyze(case_dir, case)
+            label = case.get("label", str(case_dir))
+            failures = self.analyzer.analyze(case_dir, case)
+            if failures:
+                analysis_failures[label] = failures
+
+        if analysis_failures:
+            print("\n=== Data analysis failures ===")
+            for label, failures in analysis_failures.items():
+                print(f"{label}:")
+                for failure in failures:
+                    print(f"  - {failure}")
 
 
 def parse_args():
