@@ -1,4 +1,4 @@
-#  Copyright (C) 2025 LEIDOS.
+#  Copyright (C) 2026 LEIDOS.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
 #  use this file except in compliance with the License. You may obtain a copy of
@@ -21,6 +21,7 @@ import time
 from pathlib import Path
 from scenario_generator import ScenarioGenerator
 from data_collector import DataCollector
+from data_analyzer import DataAnalyzer
 from scenario_topology import apply_scenario_topology
 
 
@@ -47,6 +48,7 @@ class ScenarioRunner:
         self.test_cases = []
         self.tmp_dir = Path("tmp").resolve()
         self.collector = DataCollector()
+        self.analyzer = DataAnalyzer()
 
     def load_parameters(self):
         if not self.parameters_path.exists():
@@ -219,7 +221,7 @@ class ScenarioRunner:
                 )
             settings["START_DELAY_IN_SECONDS"] = normalized_value
 
-    def _run_one(self, idx: int, case: dict) -> None:
+    def _run_one(self, idx: int, case: dict):
         """Generate, execute, stop, and collect data for one test case.
 
         Args:
@@ -227,8 +229,9 @@ class ScenarioRunner:
             case: Test-case mapping loaded from ``parameters.yaml``.
 
         Returns:
-            None. Runtime artifacts and collected data are written to their
-            configured locations.
+            A ``(case_dir, case)`` tuple identifying the collected data, or
+            ``None`` if ``--generate-only`` was passed and nothing was run
+            or collected.
 
         Raises:
             FileNotFoundError: If a required map, route, Compose file, or config
@@ -280,7 +283,10 @@ class ScenarioRunner:
                 f"Scenario {idx} generated. "
                 f"Inspect files in {self.tmp_dir}.\n"
             )
-            return
+            return None
+
+        print("Clearing source log directories...")
+        self.collector.clear_sources(case)
 
         try:
             # 4. Start
@@ -307,21 +313,25 @@ class ScenarioRunner:
                 )
 
         print("Collecting data outputs...")
-        self.collector.collect(idx, case)
+        case_dir = self.collector.collect(idx, case)
 
         # 7. ALWAYS clean tmp/
         shutil.rmtree(self.tmp_dir)
         print(f"Cleaned {self.tmp_dir}")
 
         print(f"Scenario {idx} complete.\n")
+        return case_dir, case
 
     def run(self):
         if not self.test_cases:
             self.load_parameters()
 
+        collected = []
         for i, case in enumerate(self.test_cases, start=1):
             try:
-                self._run_one(i, case)
+                result = self._run_one(i, case)
+                if result:
+                    collected.append(result)
             except KeyboardInterrupt:
                 print(f"Scenario {i} interrupted by user")
                 if not self.generate_only and self.tmp_dir.exists():
@@ -331,6 +341,24 @@ class ScenarioRunner:
                 print(f"Scenario {i} failed: {e}")
                 if not self.generate_only and self.tmp_dir.exists():
                     shutil.rmtree(self.tmp_dir)
+
+        if not self.generate_only:
+            self.collector.clear_sources(case)
+
+        analysis_failures = {}
+        for case_dir, case in collected:
+            print("Running data analysis...")
+            label = case.get("label", str(case_dir))
+            failures = self.analyzer.analyze(case_dir, case)
+            if failures:
+                analysis_failures[label] = failures
+
+        if analysis_failures:
+            print("\n=== Data analysis failures ===")
+            for label, failures in analysis_failures.items():
+                print(f"{label}:")
+                for failure in failures:
+                    print(f"  - {failure}")
 
 
 def parse_args():
