@@ -56,29 +56,60 @@ SIGINT_EXIT_CODE = 130
 
 
 class ScenarioRunner:
-    """Run every scenario defined in parameters.yaml."""
+    """Run or generate test cases defined in a scenario configuration."""
 
     def __init__(
         self,
-        parameters_path: str = "config/parameters/parameters.yaml",
+        config_path: str = "config/scenarios/town10.yaml",
         generate_only: bool = False,
+        test_case_label: str = None,
     ):
-        self.parameters_path = Path(parameters_path)
+        if test_case_label is not None and not generate_only:
+            raise ValueError("test_case_label requires generate_only=True")
+        self.config_path = Path(config_path)
         self.generate_only = generate_only
+        self.test_case_label = test_case_label
         self.test_cases = []
         self.tmp_dir = Path("tmp").resolve()
         self.collector = DataCollector()
         self.analyzer = DataAnalyzer()
 
     def load_parameters(self):
-        if not self.parameters_path.exists():
-            raise FileNotFoundError(f"{self.parameters_path} not found")
-        with open(self.parameters_path, 'r') as f:
+        if not self.config_path.exists():
+            raise FileNotFoundError(f"{self.config_path} not found")
+        with open(self.config_path, 'r') as f:
             data = yaml.safe_load(f)
         self.test_cases = data.get("test_cases", [])
         if not self.test_cases:
-            raise ValueError("No 'test_cases' found in parameters.yaml")
+            raise ValueError(f"No 'test_cases' found in {self.config_path}")
         print(f"Loaded {len(self.test_cases)} scenario(s)")
+
+    def _selected_test_cases(self):
+        """Return indexed test cases, optionally filtered by label."""
+
+        indexed_cases = list(enumerate(self.test_cases, start=1))
+        if self.test_case_label is None:
+            return indexed_cases
+
+        matches = [
+            (index, case)
+            for index, case in indexed_cases
+            if case.get("label", f"scenario_{index}") == self.test_case_label
+        ]
+        if not matches:
+            available = ", ".join(
+                case.get("label", f"scenario_{index}")
+                for index, case in indexed_cases
+            )
+            raise ValueError(
+                f"Test case {self.test_case_label!r} was not found. "
+                f"Available test cases: {available}"
+            )
+        if len(matches) > 1:
+            raise ValueError(
+                f"Test case label {self.test_case_label!r} is not unique"
+            )
+        return matches
 
     @staticmethod
     def _configured_file(directory: Path, name: str, suffix: str) -> Path:
@@ -114,9 +145,10 @@ class ScenarioRunner:
         """Validate and describe the resources required by one test case.
 
         Args:
-            case: Test-case mapping from ``parameters.yaml``. It must contain a
-                ``MAP`` value and may contain vehicle ``SELECTED_ROUTE`` values
-                under ``env_settings.vehicles[*].settings``.
+            case: Test-case mapping from the scenario configuration. It must
+                contain a ``MAP`` value and may contain vehicle
+                ``SELECTED_ROUTE`` values under
+                ``env_settings.vehicles[*].settings``.
             label: Test-case label used to identify configuration errors.
 
         Returns:
@@ -142,13 +174,13 @@ class ScenarioRunner:
         map_name = case.get("MAP")
         if not map_name:
             raise ValueError(
-                f"MAP is not specified in parameters.yaml for test case {label}"
+                f"MAP is not specified for test case {label}"
             )
 
         map_source = self._configured_file(MAP_DIRECTORY, str(map_name), ".osm")
         if not map_source.is_file():
             raise FileNotFoundError(
-                f"{map_name} map specified in parameters.yaml for test case "
+                f"{map_name} map specified for test case "
                 f"{label} cannot be found at {map_source}"
             )
         # Setup CDA Sim Resources
@@ -160,7 +192,7 @@ class ScenarioRunner:
             )
             if not source.is_file():
                             raise FileNotFoundError(
-                                f"{resource_name} configuration specified in parameters.yaml for "
+                                f"{resource_name} configuration specified for "
                                 f" test case {label} cannot be found in {source}!" 
                             )
             target = self.tmp_dir / resource_name
@@ -187,7 +219,7 @@ class ScenarioRunner:
             )
             if not route_source.is_file():
                 raise FileNotFoundError(
-                    f"{route_name} route specified in parameters.yaml for "
+                    f"{route_name} route specified for "
                     f"vehicle {vehicle_name} cannot be found at {route_source}"
                 )
 
@@ -219,7 +251,7 @@ class ScenarioRunner:
                 )
                 if not source.is_file():
                                 raise FileNotFoundError(
-                                    f"{resource_name} configuration specified in parameters.yaml for "
+                                    f"{resource_name} configuration specified for "
                                     f" streets instance {infra_name} cannot be found in {source}!" 
                                 )
                 target_folder_name = resource_name + "_" + infra_name
@@ -392,7 +424,7 @@ class ScenarioRunner:
 
         Args:
             idx: One-based scenario number used for display and data collection.
-            case: Test-case mapping loaded from ``parameters.yaml``.
+            case: Test-case mapping loaded from the scenario configuration.
 
         Returns:
             A ``(case_dir, case)`` tuple identifying the collected data, or
@@ -422,9 +454,9 @@ class ScenarioRunner:
             shutil.rmtree(self.tmp_dir)
         self.tmp_dir.mkdir()
 
-        # 2. Write test case parameters to yaml file in tmp/
-        test_case_param_file_name = label+"_parameter.yaml"
-        param_path = self.tmp_dir / test_case_param_file_name
+        # 2. Write the resolved test-case configuration to tmp/.
+        scenario_config_file_name = label+"_scenario.yaml"
+        param_path = self.tmp_dir / scenario_config_file_name
         with open(param_path, "w") as f:
             yaml.dump(
                 {
@@ -439,7 +471,7 @@ class ScenarioRunner:
         # 3. Generate scripts
         gen = ScenarioGenerator(
             config_path=str(param_path),
-            compose_root=self.parameters_path.parent,
+            compose_root=self.config_path.parent,
         )
         scripts = gen.generate()
         start_sh = scripts["start_script"]
@@ -498,8 +530,12 @@ class ScenarioRunner:
         if not self.test_cases:
             self.load_parameters()
 
+        selected_cases = self._selected_test_cases()
+        if self.test_case_label is not None:
+            print(f"Generating selected test case: {self.test_case_label}")
+
         collected = []
-        for i, case in enumerate(self.test_cases, start=1):
+        for i, case in selected_cases:
             try:
                 result = self._run_one(i, case)
                 if result:
@@ -533,15 +569,37 @@ class ScenarioRunner:
                     print(f"  - {failure}")
 
 
-def parse_args():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Run CDASim scenarios")
+    parser.add_argument(
+        "--config",
+        default="config/scenarios/town10.yaml",
+        metavar="PATH",
+        help=(
+            "Scenario configuration file "
+            "(default: config/scenarios/town10.yaml)"
+        ),
+    )
     parser.add_argument(
         "--generate-only",
         action="store_true",
         help="Generate environment and start/stop files without executing them",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--test-case",
+        metavar="LABEL",
+        help="Generate only the test case with this label",
+    )
+    args = parser.parse_args(argv)
+    if args.test_case and not args.generate_only:
+        parser.error("--test-case requires --generate-only")
+    return args
+
 
 if __name__ == "__main__":
     args = parse_args()
-    ScenarioRunner(generate_only=args.generate_only).run()
+    ScenarioRunner(
+        config_path=args.config,
+        generate_only=args.generate_only,
+        test_case_label=args.test_case,
+    ).run()
