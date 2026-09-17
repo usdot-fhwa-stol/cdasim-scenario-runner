@@ -7,7 +7,7 @@ It dynamically prepares Docker environments, launches simulations, and collects 
 
 ## Overview
 
-This tool allows you to define and execute multiple simulation **test cases** in one run using `parameters.yaml`.  
+This tool allows you to define and execute multiple simulation **test cases** in one run using scenario suites such as `config/scenarios/town10.yaml`.
 Each test case defines its own runtime configuration, environment images, and data output structure.
 
 The system automatically:
@@ -30,7 +30,7 @@ The system automatically:
 | **ScenarioGenerator** | Builds `.env` files, extracts `docker-compose.yml` from configuration images, and creates shell scripts for start/stop. |
 | **DataCollector** | Collects simulation output data and organizes it by test case. |
 | **sim_start.sh / sim_stop.sh** | Generated shell scripts used to bring containers up and down. |
-| **parameters.yaml** | Central configuration file defining test cases, deployment entries, images, and data output rules. |
+| **config/scenarios/** | Contains scenario-suite YAML files defining test cases, deployment entries, images, and data output rules. |
 
 ### Network topology template
 
@@ -39,23 +39,24 @@ between Compose projects. Its top-level sections are:
 
 | Section | Purpose |
 |---------|---------|
-| **`networks`** | Names the scenario-wide Docker networks, such as the simulation and cloud networks. |
+| **`networks`** | Names the scenario-wide Docker networks, including the simulation, cloud, and shared Street networks. |
 | **`shared_services`** | Defines stable network hostnames for services shared across the scenario, such as CDASim and CARMA Cloud. |
-| **`instance_topology_templates`** | Defines reusable network and endpoint patterns for repeatable Platform, Messenger, and Street instances. The allocator applies the appropriate template for each configured instance and substitutes its instance index where required. |
+| **`instance_topology_templates`** | Defines reusable network and endpoint patterns for repeatable Platform, Messenger, and Street instances. Platform and Messenger instances receive private networks; Street instances share `xil_streets_net` and receive unique DNS aliases. |
 
 ---
 
 ## Execution Flow
 
 1. **Load Configurations**
-   - `ScenarioRunner` reads `parameters.yaml` and loads all defined test cases.
+   - `ScenarioRunner` reads `config/scenarios/town10.yaml` by default and loads all defined test cases.
    - Each test case includes runtime duration, environment settings, and output configuration.
    - The map named by `MAP` and every vehicle route named by `SELECTED_ROUTE` are validated against `config/maps` and `config/routes` before scripts are generated.
 
 2. **Generate Scenario Environment**
-   - `ScenarioTopologyAllocator` loads `network_topology_template.json` and adds internal networks, Docker service hostnames, and only the instance-specific DNS aliases required to distinguish repeated endpoints. These values are not configured in `parameters.yaml`.
+   - `ScenarioTopologyAllocator` loads `network_topology_template.json` and adds internal networks, Docker service hostnames, and only the instance-specific DNS aliases required to distinguish repeated endpoints. These values are not configured in scenario-suite files.
+   - All V2X Hub instances, CDA Sim, and the Econolite virtual controller attach to the shared `xil_streets_net`; each V2X Hub keeps its project-local database and web networks.
    - `ScenarioTopologyAllocator` applies the appropriate network template to each configured instance.
-   - For each test case, `ScenarioRunner` writes a temporary `parameter.yaml`.
+   - For each test case, `ScenarioRunner` writes a temporary resolved scenario YAML file.
    - This is passed to `ScenarioGenerator`, which dynamically generates:
      - `.env` files for each Compose project (`cdasim`, CARMA Cloud, vehicles, streets)
      - Extracted `docker-compose.yml` files from the specified config images
@@ -140,6 +141,19 @@ python3 scenario_runner.py
 python3 scenario_runner.py --generate-only
 ```
 
+To generate a single test case, select it by its `label` from
+`config/scenarios/town10.yaml`:
+
+```bash
+python3 scenario_runner.py --generate-only --test-case town10_two_vehicles
+```
+
+To use another scenario configuration file:
+
+```bash
+python3 scenario_runner.py --config config/scenarios/highway.yaml
+```
+
 This generates the environment files, runtime Compose overrides, and matching
 `sim_start.sh` and `sim_stop.sh` files. It does not execute either script, wait
 for `runtime_seconds`, collect runtime data, or remove `tmp/` afterward.
@@ -183,8 +197,9 @@ project_root/
 │   ├── templates/
 │   │   ├── sim_start_template.sh.j2
 │   │   └── sim_stop_template.sh.j2
-│   └── parameters/
-│       └── parameters.yaml
+│   └── scenarios/
+│       ├── town10.yaml        # default scenario suite
+│       └── highway.yaml       # optional additional scenario suite
 ├── scenario_runner.py
 ├── scenario_generator.py
 ├── data_collector.py
