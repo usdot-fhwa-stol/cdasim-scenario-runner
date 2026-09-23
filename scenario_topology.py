@@ -68,9 +68,11 @@ class ScenarioTopologyAllocator:
     def _shared_service_allocations(self) -> Dict[str, str]:
         simulation = self.config["networks"]["simulation"]
         cloud = self.config["networks"]["cloud"]
+        streets = self.config["networks"]["streets"]
         result = {
             "SIM_NETWORK_NAME": simulation["name"],
             "CLOUD_NETWORK_NAME": cloud["name"],
+            "STREET_NETWORK_NAME": streets["name"],
         }
 
         for service in self.config["shared_services"].values():
@@ -129,7 +131,7 @@ class ScenarioTopologyAllocator:
         """Allocate one Street/V2X Hub instance."""
 
         template = self.config["instance_topology_templates"]["street"]
-        network = self._private_network(template, index)
+        network = self.config["networks"][template["network"]]
         conditions = {"evc_enabled": evc_enabled}
         return {
             "PRIVATE_NETWORK_NAME": network["name"],
