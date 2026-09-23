@@ -151,7 +151,7 @@ python3 scenario_runner.py --generate-only --test-case town10_two_vehicles
 To use another scenario configuration file:
 
 ```bash
-python3 scenario_runner.py --config config/scenarios/highway.yaml
+python3 scenario_runner.py --config config/scenarios/town10.yaml.yaml
 ```
 
 This generates the environment files, runtime Compose overrides, and matching
@@ -198,8 +198,7 @@ project_root/
 │   │   ├── sim_start_template.sh.j2
 │   │   └── sim_stop_template.sh.j2
 │   └── scenarios/
-│       ├── town10.yaml        # default scenario suite
-│       └── highway.yaml       # optional additional scenario suite
+│       └── town10.yaml        # default scenario suite
 ├── scenario_runner.py
 ├── scenario_generator.py
 ├── data_collector.py
