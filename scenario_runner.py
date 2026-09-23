@@ -417,7 +417,7 @@ class ScenarioRunner:
             )
 
     def _prepare_host_directories(self, case: dict) -> None:
-        """Prepare every host directory required before Compose starts."""
+        """Prepare every host directory required during the scenario lifecycle."""
 
         for directory in self._host_directories(case):
             self._prepare_host_directory(directory)
@@ -488,11 +488,12 @@ class ScenarioRunner:
             )
             return None
 
-        print("Clearing source log directories...")
-        self.collector.clear_sources(case)
-
         print("Preparing host directories...")
         self._prepare_host_directories(case)
+        protected_directories = self._host_directories(case)
+
+        print("Clearing source log directories...")
+        self.collector.clear_sources(case, protected_directories)
 
         try:
             # 4. Start
@@ -520,8 +521,18 @@ class ScenarioRunner:
                     f"{stop_result.returncode}"
                 )
 
+            # Some runtime images reset bind-mounted directories to 0755 and
+            # change their owner while starting. Restore host access after the
+            # containers stop so collection and cleanup can process their
+            # output, and so the directories remain usable between runs.
+            print("Restoring host directory permissions...")
+            self._prepare_host_directories(case)
+
         print("Collecting data outputs...")
         case_dir = self.collector.collect(idx, case)
+
+        print("Clearing collected source logs...")
+        self.collector.clear_sources(case, protected_directories)
 
         # 7. ALWAYS clean tmp/
         shutil.rmtree(self.tmp_dir)
@@ -553,9 +564,6 @@ class ScenarioRunner:
                 print(f"Scenario {i} failed: {e}")
                 if not self.generate_only and self.tmp_dir.exists():
                     shutil.rmtree(self.tmp_dir)
-
-        if not self.generate_only:
-            self.collector.clear_sources(case)
 
         analysis_failures = {}
         for case_dir, case in collected:
