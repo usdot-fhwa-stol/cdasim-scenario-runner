@@ -123,6 +123,33 @@ class ScenarioGenerator:
         print(f"Generated {env_path}")
         return str(env_path)
 
+    def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
+        """Add absolute staged-resource paths to the CDASim environment.
+
+        Relative bind sources in a Compose OCI artifact resolve against the
+        artifact cache rather than Scenario Runner's temporary directory. The
+        Compose files and scenario-specific overrides consume these variables
+        when mounting resources staged under ``tmp/``.
+        """
+
+        env_settings = {
+            **cdasim,
+            "settings": dict(cdasim.get("settings", {})),
+        }
+        cdasim_resources = self.config.get("scenario_resources", {}).get(
+            "cdasim_configs", []
+        )
+        for resource in cdasim_resources:
+            resource_name = re.sub(
+                r"[^A-Za-z0-9]+", "_", str(resource["name"])
+            ).strip("_").upper()
+            if not resource_name:
+                raise ValueError("CDASim resource name cannot be empty")
+            env_settings["settings"][
+                f"{resource_name}_RESOURCE_PATH"
+            ] = str(Path(resource["target"]).resolve())
+        return env_settings
+
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
     ) -> str:
@@ -800,7 +827,9 @@ class ScenarioGenerator:
             self._generate_cdasim_runtime_with_ns3_image(es['cdasim'])
 
         # Generate .env files
-        self.generate_env_file('.env.cdasim', es['cdasim'])
+        self.generate_env_file(
+            '.env.cdasim', self._cdasim_env_settings(es['cdasim'])
+        )
         if es.get('carma_cloud'):
             self.generate_env_file('.env.carma_cloud', es['carma_cloud'])
         for i, v in enumerate(es.get('vehicles', []), 1):
