@@ -134,7 +134,7 @@ class ScenarioTopologyAllocator:
         network = self.config["networks"][template["network"]]
         conditions = {"evc_enabled": evc_enabled}
         return {
-            "PRIVATE_NETWORK_NAME": network["name"],
+            "STREET_NETWORK_NAME": network["name"],
             **self._endpoint_hosts(
                 template["private_endpoints"], index, conditions
             ),

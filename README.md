@@ -141,8 +141,13 @@ python3 scenario_runner.py
 python3 scenario_runner.py --generate-only
 ```
 
-To generate a single test case, select it by its `label` from
-`config/scenarios/town10.yaml`:
+To select a single test case, identify it by its `label` from
+`config/scenarios/town10.yaml`. The selection works for both execution and
+generation-only workflows:
+
+```bash
+python3 scenario_runner.py --test-case town10_two_vehicles
+```
 
 ```bash
 python3 scenario_runner.py --generate-only --test-case town10_two_vehicles

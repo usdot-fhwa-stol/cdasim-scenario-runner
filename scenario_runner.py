@@ -64,8 +64,6 @@ class ScenarioRunner:
         generate_only: bool = False,
         test_case_label: str = None,
     ):
-        if test_case_label is not None and not generate_only:
-            raise ValueError("test_case_label requires generate_only=True")
         self.config_path = Path(config_path)
         self.generate_only = generate_only
         self.test_case_label = test_case_label
@@ -547,7 +545,7 @@ class ScenarioRunner:
 
         selected_cases = self._selected_test_cases()
         if self.test_case_label is not None:
-            print(f"Generating selected test case: {self.test_case_label}")
+            print(f"Selected test case: {self.test_case_label}")
 
         collected = []
         for i, case in selected_cases:
@@ -600,12 +598,9 @@ def parse_args(argv=None):
     parser.add_argument(
         "--test-case",
         metavar="LABEL",
-        help="Generate only the test case with this label",
+        help="Run or generate only the test case with this label",
     )
-    args = parser.parse_args(argv)
-    if args.test_case and not args.generate_only:
-        parser.error("--test-case requires --generate-only")
-    return args
+    return parser.parse_args(argv)
 
 
 if __name__ == "__main__":

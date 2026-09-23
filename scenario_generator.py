@@ -30,6 +30,12 @@ CDASIM_RUNTIME_TEMPLATE_PATH = (
     / "cdasim"
     / "runtime.template.json"
 )
+STREET_NETWORK_OVERRIDE_PATH = (
+    Path(__file__).resolve().parent
+    / "config"
+    / "compose"
+    / "street-network.override.yml"
+)
 
 
 class ScenarioGenerator:
@@ -460,7 +466,7 @@ class ScenarioGenerator:
         if streets:
             network_key = "streets_shared"
             street_network_name = streets[0]["settings"][
-                "PRIVATE_NETWORK_NAME"
+                "STREET_NETWORK_NAME"
             ]
             service_networks[network_key] = {
                 "aliases": ["cdasim"],
@@ -493,39 +499,6 @@ class ScenarioGenerator:
                 {
                     "services": services,
                     "networks": networks,
-                },
-                sort_keys=False,
-            ),
-            encoding="utf-8",
-        )
-        return str(override_path)
-
-    def _generate_street_network_override(
-        self, street: Dict[str, Any], index: int
-    ) -> str:
-        """Attach one V2X Hub instance to the shared street network."""
-
-        settings = street["settings"]
-        network_key = "streets_shared"
-        override_path = self.tmp_dir / f"street-{index}-network-override.yml"
-        override_path.write_text(
-            yaml.safe_dump(
-                {
-                    "services": {
-                        "v2xhub": {
-                            "networks": {
-                                network_key: {
-                                    "aliases": [settings["V2XHUB_SIM_HOST"]]
-                                }
-                            }
-                        }
-                    },
-                    "networks": {
-                        network_key: {
-                            "external": True,
-                            "name": settings["PRIVATE_NETWORK_NAME"],
-                        }
-                    },
                 },
                 sort_keys=False,
             ),
@@ -763,9 +736,7 @@ class ScenarioGenerator:
         # Streets
         for i, s in enumerate(es.get('streets', []), 1):
             compose_files = self._compose_files(s, s['PROJECT_NAME'])
-            compose_files.append(
-                self._generate_street_network_override(s, i)
-            )
+            compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],
@@ -773,7 +744,7 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': None,
-                'street_net': s['settings']['PRIVATE_NETWORK_NAME'],
+                'street_net': s['settings']['STREET_NETWORK_NAME'],
                 'project_directory': f"{self.tmp_dir}/"
             })
 
