@@ -363,6 +363,10 @@ class ScenarioRunner:
         collect = case.get("data_output", {}).get("collect", {})
         directories.update(Path(path) for path in collect.values() if path)
 
+        mosaic_log_root = collect.get("mosaic_logs")
+        if mosaic_log_root:
+            directories.add(Path(mosaic_log_root) / "carla-sensor-lib")
+
         rosbag_root = collect.get("rosbags")
         if rosbag_root:
             for vehicle in case.get("env_settings", {}).get("vehicles", []):
