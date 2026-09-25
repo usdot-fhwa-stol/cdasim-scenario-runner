@@ -96,6 +96,11 @@ configure those entries:
 | **`COMPOSE_FILE`** | A repository-local base Compose file or a docker compose OC artifact used instead of `CONFIG_IMAGE_FULL`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
 
+Under the CDASim deployment's `settings`, `CDASIM_RESOURCES` maps each
+directory under `config/cdasim` to either one file name or a list of file
+names. Scenario Runner stages every listed file into the matching directory
+under `tmp` before Compose starts.
+
 `START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
 string. Scenario Runner normalizes it to a floating-point value because the
 CARMA-CARLA ROS 2 node declares `start_delay_in_seconds` as a double parameter.

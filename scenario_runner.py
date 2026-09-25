@@ -183,25 +183,48 @@ class ScenarioRunner:
             )
         # Setup CDA Sim Resources
         cdasim_configs = []
-        cdasim_resources  = case.get("env_settings",{}).get("cdasim",{}).get("settings",{}).get("CDASIM_RESOURCES",{})
-        for resource_name, resource_value in cdasim_resources.items():
-            source = self._configured_file( 
-                CDASIM_CONFIG_DIRECTORY / resource_name, resource_value, ""
-            )
-            if not source.is_file():
-                            raise FileNotFoundError(
-                                f"{resource_name} configuration specified for "
-                                f" test case {label} cannot be found in {source}!" 
-                            )
+        cdasim_resources = (
+            case.get("env_settings", {})
+            .get("cdasim", {})
+            .get("settings", {})
+            .get("CDASIM_RESOURCES", {})
+        )
+        for resource_name, configured_files in cdasim_resources.items():
+            if isinstance(configured_files, str):
+                resource_files = [configured_files]
+            elif isinstance(configured_files, list) and configured_files:
+                resource_files = configured_files
+            else:
+                raise ValueError(
+                    f"CDASIM resource {resource_name!r} must specify a "
+                    "file name or a non-empty list of file names"
+                )
+
             target = self.tmp_dir / resource_name
-            cdasim_configs.append(
-                {
-                    "source": str(source),
-                    "target": str(target),
-                    "name": str(resource_name),
-                    "test_case": str(label)
-                }
-            ) 
+            for resource_file in resource_files:
+                if not isinstance(resource_file, str) or not resource_file:
+                    raise ValueError(
+                        f"CDASIM resource {resource_name!r} contains an "
+                        f"invalid file name: {resource_file!r}"
+                    )
+                source = self._configured_file(
+                    CDASIM_CONFIG_DIRECTORY / resource_name,
+                    resource_file,
+                    "",
+                )
+                if not source.is_file():
+                    raise FileNotFoundError(
+                        f"{resource_name} configuration specified for "
+                        f"test case {label} cannot be found in {source}!"
+                    )
+                cdasim_configs.append(
+                    {
+                        "source": str(source),
+                        "target": str(target),
+                        "name": str(resource_name),
+                        "test_case": str(label),
+                    }
+                )
         routes = []
         route_targets = set()
         vehicles = case.get("env_settings", {}).get("vehicles", [])

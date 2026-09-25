@@ -65,7 +65,6 @@ services:
       - DISPLAY=${DISPLAY}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - "${EVC_SUMO_RESOURCE_PATH:-./evc_sumo}:/home/carma/src/resources"
       - "${PYEOS_DB_RESOURCE_PATH:-./pyeos_db}:/home/carma/shared_data"
     depends_on:
       - cdasim

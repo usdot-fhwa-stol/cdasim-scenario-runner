@@ -119,7 +119,10 @@ class ScenarioGenerator:
                 if isinstance(v, dict):
                     items.extend(flatten(v, f"{key}_"))
                 else:
-                    val = "" if v is None else str(v)
+                    if isinstance(v, list):
+                        val = ",".join(str(item) for item in v)
+                    else:
+                        val = "" if v is None else str(v)
                     items.append(f"{key}={val}")
             return items
 
