@@ -21,6 +21,7 @@ DEFAULT_DATA_OUTPUT = {
     "output_directory": "/opt/carma-simulation/tests/output/scenario_runner",
     "collect": {
         "mosaic_logs": "/opt/carma-simulation/logs",
+        "carla_sensor_lib_logs": "/opt/carla-sensor-lib",
         "rosbags": "/opt/carma/logs",
         "v2xhub_logs": "/tmp/cdasim-scenario-runner",
         "carmacloud_logs": "/opt/carma/logs/carmacloud",
@@ -304,6 +305,9 @@ def _apply_cdasim_topology(
     cdasim["settings"].update(
         {
             "CDASIM_LOG_ROOT": data_output["collect"]["mosaic_logs"],
+            "CARLA_SENSOR_LIB_LOG_ROOT": data_output["collect"][
+                "carla_sensor_lib_logs"
+            ],
             **topology.core,
         }
     )

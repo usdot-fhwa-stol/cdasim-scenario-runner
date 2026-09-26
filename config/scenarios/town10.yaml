@@ -56,6 +56,7 @@ test_cases:
       output_directory: /opt/carma-simulation/tests/output/town10
       collect:
         mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
         rosbags: /opt/carma/logs
 
   - label: town10_two_vehicles
@@ -181,5 +182,6 @@ test_cases:
       output_directory: /opt/carma-simulation/tests/output/town10
       collect:
         mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
         rosbags: /opt/carma/logs
         v2xhub_logs : /opt/v2xhub/logs

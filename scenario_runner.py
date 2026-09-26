@@ -35,6 +35,7 @@ MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
 SIMULATION_TMP_DIRECTORY = Path("/opt/carma-simulation/tmp")
 SIMULATION_LOG_DIRECTORY = Path("/opt/carma-simulation/logs")
+CARLA_SENSOR_LIB_LOG_DIRECTORY = Path("/opt/carla-sensor-lib")
 CARMA_LOG_DIRECTORY = Path("/opt/carma/logs")
 V2XHUB_DIRECTORY = Path("/opt/v2xhub")
 V2XHUB_DOWNLOAD_DIRECTORY = V2XHUB_DIRECTORY / "download"
@@ -44,6 +45,7 @@ LEGACY_V2XHUB_LOG_DIRECTORY = Path("/tmp/cdasim-scenario-runner")
 ALLOWED_HOST_DIRECTORY_ROOTS = (
     SIMULATION_TMP_DIRECTORY,
     SIMULATION_LOG_DIRECTORY,
+    CARLA_SENSOR_LIB_LOG_DIRECTORY,
     CARMA_LOG_DIRECTORY,
     MAP_TARGET_DIRECTORY,
     ROUTE_TARGET_DIRECTORY,
@@ -373,6 +375,7 @@ class ScenarioRunner:
         directories = {
             SIMULATION_TMP_DIRECTORY,
             SIMULATION_LOG_DIRECTORY,
+            CARLA_SENSOR_LIB_LOG_DIRECTORY,
             CARMA_LOG_DIRECTORY,
             MAP_TARGET_DIRECTORY,
             ROUTE_TARGET_DIRECTORY,
@@ -383,10 +386,6 @@ class ScenarioRunner:
 
         collect = case.get("data_output", {}).get("collect", {})
         directories.update(Path(path) for path in collect.values() if path)
-
-        mosaic_log_root = collect.get("mosaic_logs")
-        if mosaic_log_root:
-            directories.add(Path(mosaic_log_root) / "carla-sensor-lib")
 
         rosbag_root = collect.get("rosbags")
         if rosbag_root:
