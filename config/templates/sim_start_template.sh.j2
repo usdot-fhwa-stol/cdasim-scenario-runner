@@ -58,7 +58,7 @@ stage_map_file() {
     local backup_file
 
     if [ ! -f "$source_file" ]; then
-        echo "Error: $map_name map specified in parameters.yaml for test case $test_case cannot be found at $source_file" >&2
+        echo "Error: $map_name map specified for test case $test_case cannot be found at $source_file" >&2
         exit 1
     fi
 
@@ -96,7 +96,7 @@ stage_resource_file() {
     local name="$4"
 
     if [ ! -f "$source_file" ]; then
-        echo "Error: $resource_name resource specified in parameters.yaml for component $name cannot be found at $source_file" >&2
+        echo "Error: $resource_name resource specified for component $name cannot be found at $source_file" >&2
         exit 1
     fi
     if [ -e "$target"  ] && [ ! -d "$target" ]; then
@@ -146,7 +146,7 @@ stage_resource_file  \
     {{shell_quote(config.source) }} \
     {{shell_quote(config.target)}} \
     {{shell_quote(config.name) }} \
-    {{shell_quote(config.infrastructure)}}
+    {{shell_quote(config.test_case)}}
 
 
 {% endfor %}

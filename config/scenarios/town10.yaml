@@ -14,6 +14,8 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
+          - ../compose/cdasim-town10-evc.override.yml
+          - ../compose/cdasim-town10-sumo.override.yml
         settings:
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
@@ -21,6 +23,12 @@ test_cases:
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          CDASIM_RESOURCES:
+            pyeos_db: .pyeos.db
+            evc_sumo:
+              - evc_sumo_cfg.json
+              - tl_189.cfg
+            sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
@@ -48,10 +56,11 @@ test_cases:
       output_directory: /opt/carma-simulation/tests/output/town10
       collect:
         mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
         rosbags: /opt/carma/logs
 
   - label: town10_two_vehicles
-    runtime_seconds: 90
+    runtime_seconds: 300
     MAP: Town10
 
     env_settings:
@@ -61,6 +70,8 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
+          - ../compose/cdasim-town10-evc.override.yml
+          - ../compose/cdasim-town10-sumo.override.yml
         settings:
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
@@ -70,7 +81,10 @@ test_cases:
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
-            evc_sumo: evc_sumo_cfg.json
+            evc_sumo:
+              - evc_sumo_cfg.json
+              - tl_189.cfg
+            sumocfg: Town10_client_2.sumocfg
 
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
@@ -168,5 +182,6 @@ test_cases:
       output_directory: /opt/carma-simulation/tests/output/town10
       collect:
         mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
         rosbags: /opt/carma/logs
         v2xhub_logs : /opt/v2xhub/logs

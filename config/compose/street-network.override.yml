@@ -1,0 +1,11 @@
+services:
+  v2xhub:
+    networks:
+      streets_shared:
+        aliases:
+          - "${V2XHUB_SIM_HOST:?V2XHUB_SIM_HOST is required}"
+
+networks:
+  streets_shared:
+    external: true
+    name: "${STREET_NETWORK_NAME:?STREET_NETWORK_NAME is required}"

@@ -30,6 +30,12 @@ CDASIM_RUNTIME_TEMPLATE_PATH = (
     / "cdasim"
     / "runtime.template.json"
 )
+STREET_NETWORK_OVERRIDE_PATH = (
+    Path(__file__).resolve().parent
+    / "config"
+    / "compose"
+    / "street-network.override.yml"
+)
 
 
 class ScenarioGenerator:
@@ -57,7 +63,7 @@ class ScenarioGenerator:
 
     def __init__(
         self,
-        config_path='tmp/parameter.yaml',
+        config_path='tmp/scenario.yaml',
         start_template='config/templates/sim_start_template.sh.j2',
         stop_template='config/templates/sim_stop_template.sh.j2',
         tmp_dir='tmp',
@@ -113,7 +119,10 @@ class ScenarioGenerator:
                 if isinstance(v, dict):
                     items.extend(flatten(v, f"{key}_"))
                 else:
-                    val = "" if v is None else str(v)
+                    if isinstance(v, list):
+                        val = ",".join(str(item) for item in v)
+                    else:
+                        val = "" if v is None else str(v)
                     items.append(f"{key}={val}")
             return items
 
@@ -122,6 +131,33 @@ class ScenarioGenerator:
         env_path.write_text(content)
         print(f"Generated {env_path}")
         return str(env_path)
+
+    def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
+        """Add absolute staged-resource paths to the CDASim environment.
+
+        Relative bind sources in a Compose OCI artifact resolve against the
+        artifact cache rather than Scenario Runner's temporary directory. The
+        Compose files and scenario-specific overrides consume these variables
+        when mounting resources staged under ``tmp/``.
+        """
+
+        env_settings = {
+            **cdasim,
+            "settings": dict(cdasim.get("settings", {})),
+        }
+        cdasim_resources = self.config.get("scenario_resources", {}).get(
+            "cdasim_configs", []
+        )
+        for resource in cdasim_resources:
+            resource_name = re.sub(
+                r"[^A-Za-z0-9]+", "_", str(resource["name"])
+            ).strip("_").upper()
+            if not resource_name:
+                raise ValueError("CDASim resource name cannot be empty")
+            env_settings["settings"][
+                f"{resource_name}_RESOURCE_PATH"
+            ] = str(Path(resource["target"]).resolve())
+        return env_settings
 
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
@@ -413,9 +449,11 @@ class ScenarioGenerator:
         return compose_files
 
     def _generate_cdasim_network_override(
-        self, vehicles: List[Dict[str, Any]]
+        self,
+        vehicles: List[Dict[str, Any]],
+        streets: List[Dict[str, Any]],
     ) -> Optional[str]:
-        """Attach CDASim to every Platform and Messenger private network."""
+        """Attach CDASim to vehicle networks and the shared street network."""
 
         service_networks = {}
         networks = {}
@@ -428,16 +466,41 @@ class ScenarioGenerator:
                 "name": settings["PRIVATE_NETWORK_NAME"],
             }
 
+        if streets:
+            network_key = "streets_shared"
+            street_network_name = streets[0]["settings"][
+                "STREET_NETWORK_NAME"
+            ]
+            service_networks[network_key] = {
+                "aliases": ["cdasim"],
+            }
+            evc_aliases = [
+                street["settings"]["EVC_SIM_HOST"]
+                for street in streets
+                if "EVC_SIM_HOST" in street["settings"]
+            ]
+            evc_network = {}
+            if evc_aliases:
+                evc_network["aliases"] = evc_aliases
+            networks[network_key] = {
+                "external": True,
+                "name": street_network_name,
+            }
+
         if not networks:
             return None
+
+        services = {"cdasim": {"networks": service_networks}}
+        if streets:
+            services["econolite-virtual-controller"] = {
+                "networks": {"streets_shared": evc_network}
+            }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"
         override_path.write_text(
             yaml.safe_dump(
                 {
-                    "services": {
-                        "cdasim": {"networks": service_networks}
-                    },
+                    "services": services,
                     "networks": networks,
                 },
                 sort_keys=False,
@@ -614,7 +677,8 @@ class ScenarioGenerator:
         cd = es['cdasim']
         compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
         private_network_override = self._generate_cdasim_network_override(
-            es.get('vehicles', [])
+            es.get('vehicles', []),
+            es.get('streets', []),
         )
         if private_network_override:
             compose_files.append(private_network_override)
@@ -675,6 +739,7 @@ class ScenarioGenerator:
         # Streets
         for i, s in enumerate(es.get('streets', []), 1):
             compose_files = self._compose_files(s, s['PROJECT_NAME'])
+            compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],
@@ -682,7 +747,7 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': None,
-                'street_net': f"{s['PROJECT_NAME']}_street_net",
+                'street_net': s['settings']['STREET_NETWORK_NAME'],
                 'project_directory': f"{self.tmp_dir}/"
             })
 
@@ -736,7 +801,9 @@ class ScenarioGenerator:
             self._generate_cdasim_runtime_with_ns3_image(es['cdasim'])
 
         # Generate .env files
-        self.generate_env_file('.env.cdasim', es['cdasim'])
+        self.generate_env_file(
+            '.env.cdasim', self._cdasim_env_settings(es['cdasim'])
+        )
         if es.get('carma_cloud'):
             self.generate_env_file('.env.carma_cloud', es['carma_cloud'])
         for i, v in enumerate(es.get('vehicles', []), 1):
