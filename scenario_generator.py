@@ -147,6 +147,20 @@ class ScenarioGenerator:
             **cdasim,
             "settings": dict(cdasim.get("settings", {})),
         }
+        settings = env_settings["settings"]
+        evc_enabled = bool((settings.get("EVC") or {}).get("enable", False))
+        compose_profiles = [
+            profile.strip()
+            for profile in str(settings.get("COMPOSE_PROFILES", "")).split(",")
+            if profile.strip() and profile.strip() != "evc"
+        ]
+        if evc_enabled:
+            compose_profiles.append("evc")
+        if compose_profiles:
+            settings["COMPOSE_PROFILES"] = ",".join(compose_profiles)
+        else:
+            settings.pop("COMPOSE_PROFILES", None)
+
         cdasim_resources = self.config.get("scenario_resources", {}).get(
             "cdasim_configs", []
         )
@@ -156,7 +170,7 @@ class ScenarioGenerator:
             ).strip("_").upper()
             if not resource_name:
                 raise ValueError("CDASim resource name cannot be empty")
-            env_settings["settings"][
+            settings[
                 f"{resource_name}_RESOURCE_PATH"
             ] = str(Path(resource["target"]).resolve())
         return env_settings
@@ -457,8 +471,9 @@ class ScenarioGenerator:
         self,
         vehicles: List[Dict[str, Any]],
         streets: List[Dict[str, Any]],
-    ) -> Optional[str]:
-        """Attach CDASim to vehicle networks and the shared street network."""
+        evc_enabled: bool,
+    ) -> str:
+        """Configure CDASim networks and the optional EVC service."""
 
         service_networks = {}
         networks = {}
@@ -479,27 +494,21 @@ class ScenarioGenerator:
             service_networks[network_key] = {
                 "aliases": ["cdasim"],
             }
-            evc_aliases = [
-                street["settings"]["EVC_SIM_HOST"]
-                for street in streets
-                if "EVC_SIM_HOST" in street["settings"]
-            ]
-            evc_network = {}
-            if evc_aliases:
-                evc_network["aliases"] = evc_aliases
             networks[network_key] = {
                 "external": True,
                 "name": street_network_name,
             }
 
-        if not networks:
-            return None
+        services = {}
+        if service_networks:
+            services["cdasim"] = {"networks": service_networks}
 
-        services = {"cdasim": {"networks": service_networks}}
-        if streets:
-            services["econolite-virtual-controller"] = {
-                "networks": {"streets_shared": evc_network}
+        evc_service = {"profiles": ["evc"]}
+        if streets and evc_enabled:
+            evc_service["networks"] = {
+                "streets_shared": {"aliases": ["evc"]}
             }
+        services["econolite-virtual-controller"] = evc_service
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"
         override_path.write_text(
@@ -681,9 +690,13 @@ class ScenarioGenerator:
         # CDASim
         cd = es['cdasim']
         compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
+        evc_enabled = bool(
+            (cd.get('settings', {}).get('EVC') or {}).get('enable', False)
+        )
         private_network_override = self._generate_cdasim_network_override(
             es.get('vehicles', []),
             es.get('streets', []),
+            evc_enabled,
         )
         if private_network_override:
             compose_files.append(private_network_override)

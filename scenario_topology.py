@@ -128,20 +128,15 @@ class ScenarioTopologyAllocator:
 
         return self._allocate_instance("messenger", index)
 
-    def allocate_street(self, index: int, evc_enabled: bool) -> Dict[str, str]:
+    def allocate_street(self, index: int) -> Dict[str, str]:
         """Allocate one Street/V2X Hub instance."""
 
         template = self.config["instance_topology_templates"]["street"]
         network = self.config["networks"][template["network"]]
-        conditions = {"evc_enabled": evc_enabled}
         return {
             "STREET_NETWORK_NAME": network["name"],
-            **self._endpoint_hosts(
-                template["private_endpoints"], index, conditions
-            ),
-            **self._endpoint_hosts(
-                template["simulation_endpoints"], index, conditions
-            ),
+            **self._endpoint_hosts(template["private_endpoints"], index),
+            **self._endpoint_hosts(template["simulation_endpoints"], index),
         }
 
 
@@ -238,9 +233,7 @@ def _apply_street_topology(
 
     for index, street in enumerate(streets, 1):
         settings = street["settings"]
-        allocation = topology.allocate_street(
-            index, bool((settings.get("EVC") or {}).get("enable", False))
-        )
+        allocation = topology.allocate_street(index)
         label =  street["PROJECT_NAME"]
         settings.update(
             {

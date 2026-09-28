@@ -17,6 +17,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          EVC:
+            enable: false
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -75,6 +77,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          EVC:
+            enable: false
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -148,9 +152,6 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES: 
               v2xhub_db_init: default.localhost.sql
-            EVC:
-              enable: false
-              snmp_port: 5555
             SENSORS:
               enable: false
               sensor_id: lidar_1
@@ -171,9 +172,6 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 2
             INFRASTRUCTURE_RESOURCES: 
               v2xhub_db_init: default.localhost.sql
-            EVC:
-              enable: false
-              snmp_port: 5556
             SENSORS:
               enable: false
               sensor_id: lidar_2
