@@ -105,22 +105,23 @@ EVC is an optional CDASim service. Configure its lifecycle once under the
 CDASim deployment rather than on individual Street instances:
 
 ```yaml
+COMPOSE_OVERRIDES:
+  - ../compose/cdasim-town10-evc.override.yml
 settings:
   EVC:
     enable: false
-    COMPOSE_OVERRIDES:
-      - ../compose/cdasim-town10-evc.override.yml
-    RESOURCES:
-      pyeos_db: .pyeos.db
-      evc_sumo:
-        - evc_sumo_cfg.json
-        - tl_189.cfg
+  CDASIM_RESOURCES:
+    pyeos_db: .pyeos.db
+    evc_sumo:
+      - evc_sumo_cfg.json
+      - tl_189.cfg
 ```
 
 When enabled, Scenario Runner activates the Compose `evc` profile and attaches
 the controller to the shared Street network with the `evc` alias. Street
-entries do not control whether EVC starts. When disabled, EVC-specific Compose
-overrides and resources are not resolved, validated, or staged.
+entries do not control whether EVC starts. The EVC configuration remains
+declared in the scenario YAML when disabled, but its resources are not
+resolved, validated, or staged, and its profiled service does not run.
 
 For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
 to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario

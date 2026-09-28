@@ -31,6 +31,7 @@ INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
 CDASIM_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "cdasim"
+EVC_RESOURCE_NAMES = frozenset({"evc_sumo", "pyeos_db"})
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
 SIMULATION_TMP_DIRECTORY = Path("/opt/carma-simulation/tmp")
@@ -192,15 +193,12 @@ class ScenarioRunner:
         )
         cdasim_resources = dict(cdasim_settings.get("CDASIM_RESOURCES", {}))
         evc = cdasim_settings.get("EVC") or {}
-        if bool(evc.get("enable", False)):
-            evc_resources = evc.get("RESOURCES", {})
-            duplicate_resources = cdasim_resources.keys() & evc_resources.keys()
-            if duplicate_resources:
-                duplicates = ", ".join(sorted(duplicate_resources))
-                raise ValueError(
-                    f"Duplicate CDASim and EVC resources: {duplicates}"
-                )
-            cdasim_resources.update(evc_resources)
+        if not bool(evc.get("enable", False)):
+            cdasim_resources = {
+                name: files
+                for name, files in cdasim_resources.items()
+                if name not in EVC_RESOURCE_NAMES
+            }
         for resource_name, configured_files in cdasim_resources.items():
             if isinstance(configured_files, str):
                 resource_files = [configured_files]
