@@ -14,11 +14,17 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           EVC:
             enable: false
+            COMPOSE_OVERRIDES:
+              - ../compose/cdasim-town10-evc.override.yml
+            RESOURCES:
+              pyeos_db: .pyeos.db
+              evc_sumo:
+                - evc_sumo_cfg.json
+                - tl_189.cfg
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -26,10 +32,6 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           CDASIM_RESOURCES:
-            pyeos_db: .pyeos.db
-            evc_sumo:
-              - evc_sumo_cfg.json
-              - tl_189.cfg
             sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
@@ -74,11 +76,17 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           EVC:
             enable: false
+            COMPOSE_OVERRIDES:
+              - ../compose/cdasim-town10-evc.override.yml
+            RESOURCES:
+              pyeos_db: .pyeos.db
+              evc_sumo:
+                - evc_sumo_cfg.json
+                - tl_189.cfg
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -86,10 +94,6 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           CDASIM_RESOURCES:
-            pyeos_db: .pyeos.db
-            evc_sumo:
-              - evc_sumo_cfg.json
-              - tl_189.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:

@@ -148,7 +148,11 @@ class ScenarioGenerator:
             "settings": dict(cdasim.get("settings", {})),
         }
         settings = env_settings["settings"]
-        evc_enabled = bool((settings.get("EVC") or {}).get("enable", False))
+        evc = dict(settings.get("EVC") or {})
+        evc_enabled = bool(evc.get("enable", False))
+        evc.pop("COMPOSE_OVERRIDES", None)
+        evc.pop("RESOURCES", None)
+        settings["EVC"] = evc
         compose_profiles = [
             profile.strip()
             for profile in str(settings.get("COMPOSE_PROFILES", "")).split(",")
@@ -456,9 +460,12 @@ class ScenarioGenerator:
     def _compose_files(self, component: Dict, project_name: str) -> List[str]:
         compose_files = [self._base_compose(component, project_name)]
         self._stage_config_overrides(component, project_name)
+        compose_overrides = list(component.get('COMPOSE_OVERRIDES', []))
+        evc = (component.get('settings', {}).get('EVC') or {})
+        if bool(evc.get('enable', False)):
+            compose_overrides.extend(evc.get('COMPOSE_OVERRIDES', []))
         compose_files.extend(
-            self._resolve_compose_path(path)
-            for path in component.get('COMPOSE_OVERRIDES', [])
+            self._resolve_compose_path(path) for path in compose_overrides
         )
         compose_files.extend(
             self._resolve_compose_path(path)
