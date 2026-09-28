@@ -1,0 +1,7 @@
+services:
+  cdasim:
+    volumes:
+      - type: bind
+        source: "${SUMOCFG_RESOURCE_PATH:?SUMOCFG_RESOURCE_PATH is required}/${CDASIM_RESOURCES_SUMOCFG:?CDASIM_RESOURCES_SUMOCFG is required}"
+        target: /opt/carma-simulation/scenarios/Town10/sumo/Town10.sumocfg
+        read_only: true

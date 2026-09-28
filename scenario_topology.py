@@ -21,6 +21,7 @@ DEFAULT_DATA_OUTPUT = {
     "output_directory": "/opt/carma-simulation/tests/output/scenario_runner",
     "collect": {
         "mosaic_logs": "/opt/carma-simulation/logs",
+        "carla_sensor_lib_logs": "/opt/carla-sensor-lib",
         "rosbags": "/opt/carma/logs",
         "v2xhub_logs": "/tmp/cdasim-scenario-runner",
         "carmacloud_logs": "/opt/carma/logs/carmacloud",
@@ -68,9 +69,11 @@ class ScenarioTopologyAllocator:
     def _shared_service_allocations(self) -> Dict[str, str]:
         simulation = self.config["networks"]["simulation"]
         cloud = self.config["networks"]["cloud"]
+        streets = self.config["networks"]["streets"]
         result = {
             "SIM_NETWORK_NAME": simulation["name"],
             "CLOUD_NETWORK_NAME": cloud["name"],
+            "STREET_NETWORK_NAME": streets["name"],
         }
 
         for service in self.config["shared_services"].values():
@@ -129,10 +132,10 @@ class ScenarioTopologyAllocator:
         """Allocate one Street/V2X Hub instance."""
 
         template = self.config["instance_topology_templates"]["street"]
-        network = self._private_network(template, index)
+        network = self.config["networks"][template["network"]]
         conditions = {"evc_enabled": evc_enabled}
         return {
-            "PRIVATE_NETWORK_NAME": network["name"],
+            "STREET_NETWORK_NAME": network["name"],
             **self._endpoint_hosts(
                 template["private_endpoints"], index, conditions
             ),
@@ -302,6 +305,9 @@ def _apply_cdasim_topology(
     cdasim["settings"].update(
         {
             "CDASIM_LOG_ROOT": data_output["collect"]["mosaic_logs"],
+            "CARLA_SENSOR_LIB_LOG_ROOT": data_output["collect"][
+                "carla_sensor_lib_logs"
+            ],
             **topology.core,
         }
     )

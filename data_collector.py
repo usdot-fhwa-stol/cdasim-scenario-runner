@@ -12,6 +12,7 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
 import shutil
@@ -47,7 +48,55 @@ class DataCollector:
 
         return case_dir
 
-    def clear_sources(self, config: dict):
+    @staticmethod
+    def _preserved_directory_tree(
+        source: Path, protected_directories: Iterable[Path]
+    ) -> set[Path]:
+        """Return protected directories and their ancestors under source."""
+
+        source = source.resolve(strict=False)
+        preserved = {source}
+        for directory in protected_directories:
+            candidate = Path(directory).resolve(strict=False)
+            try:
+                candidate.relative_to(source)
+            except ValueError:
+                continue
+
+            while True:
+                preserved.add(candidate)
+                if candidate == source:
+                    break
+                candidate = candidate.parent
+        return preserved
+
+    @classmethod
+    def _clear_directory_contents(
+        cls, directory: Path, preserved: set[Path]
+    ) -> None:
+        """Delete contents recursively while retaining preserved directories."""
+
+        for child in directory.iterdir():
+            if child.is_symlink() or not child.is_dir():
+                child.unlink()
+                continue
+
+            cls._clear_directory_contents(child, preserved)
+            if child.resolve(strict=False) not in preserved:
+                child.rmdir()
+
+    def clear_sources(
+        self,
+        config: dict,
+        protected_directories: Iterable[Path] = (),
+    ) -> None:
+        """Clear collected files without removing required host directories.
+
+        Files, symlinks, and other non-directory entries are removed
+        recursively. Empty directories are removed unless they are a collection
+        root, a protected directory, or an ancestor of a protected directory.
+        """
+
         data_output = config.get("data_output")
         if not data_output:
             return
@@ -56,11 +105,10 @@ class DataCollector:
             src = Path(value)
             if not src.exists():
                 continue
-            for child in src.iterdir():
-                if child.is_symlink() or child.is_file():
-                    child.unlink()
-                else:
-                    shutil.rmtree(child)
+            preserved = self._preserved_directory_tree(
+                src, protected_directories
+            )
+            self._clear_directory_contents(src, preserved)
             print(f"Cleared {src}")
 
     def _collect_folder(self, src_base: Path, dest: Path):

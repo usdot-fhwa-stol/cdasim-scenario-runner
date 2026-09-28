@@ -5,6 +5,9 @@
     },
     "cloud": {
       "name": "xil_cloud_net"
+    },
+    "streets": {
+      "name": "xil_streets_net"
     }
   },
   "shared_services": {
@@ -114,7 +117,7 @@
       }
     },
     "street": {
-      "network_name_template": "xil_street_{index}_net",
+      "network": "streets",
       "private_endpoints": {
         "v2xhub": {
           "env": "V2XHUB_PRIVATE_HOST",

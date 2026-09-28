@@ -16,6 +16,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -30,6 +31,13 @@ CDASIM_RUNTIME_TEMPLATE_PATH = (
     / "cdasim"
     / "runtime.template.json"
 )
+STREET_NETWORK_OVERRIDE_PATH = (
+    Path(__file__).resolve().parent
+    / "config"
+    / "compose"
+    / "street-network.override.yml"
+)
+CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
 
 
 class ScenarioGenerator:
@@ -57,7 +65,7 @@ class ScenarioGenerator:
 
     def __init__(
         self,
-        config_path='tmp/parameter.yaml',
+        config_path='tmp/scenario.yaml',
         start_template='config/templates/sim_start_template.sh.j2',
         stop_template='config/templates/sim_stop_template.sh.j2',
         tmp_dir='tmp',
@@ -72,7 +80,7 @@ class ScenarioGenerator:
             compose_root if compose_root is not None else self.config_path.parent
         ).resolve()
         self.data: Dict[str, Any] = {}  # will hold scenario + temp_dir
-        self._config_containers: Dict[str, Dict[str, str]] = {}
+        self._config_containers: Dict[str, Dict[str, Any]] = {}
 
     # --------------------------------------------------------------------- #
     # 1. Load config + create ./tmp/
@@ -113,7 +121,10 @@ class ScenarioGenerator:
                 if isinstance(v, dict):
                     items.extend(flatten(v, f"{key}_"))
                 else:
-                    val = "" if v is None else str(v)
+                    if isinstance(v, list):
+                        val = ",".join(str(item) for item in v)
+                    else:
+                        val = "" if v is None else str(v)
                     items.append(f"{key}={val}")
             return items
 
@@ -122,6 +133,33 @@ class ScenarioGenerator:
         env_path.write_text(content)
         print(f"Generated {env_path}")
         return str(env_path)
+
+    def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
+        """Add absolute staged-resource paths to the CDASim environment.
+
+        Relative bind sources in a Compose OCI artifact resolve against the
+        artifact cache rather than Scenario Runner's temporary directory. The
+        Compose files and scenario-specific overrides consume these variables
+        when mounting resources staged under ``tmp/``.
+        """
+
+        env_settings = {
+            **cdasim,
+            "settings": dict(cdasim.get("settings", {})),
+        }
+        cdasim_resources = self.config.get("scenario_resources", {}).get(
+            "cdasim_configs", []
+        )
+        for resource in cdasim_resources:
+            resource_name = re.sub(
+                r"[^A-Za-z0-9]+", "_", str(resource["name"])
+            ).strip("_").upper()
+            if not resource_name:
+                raise ValueError("CDASim resource name cannot be empty")
+            env_settings["settings"][
+                f"{resource_name}_RESOURCE_PATH"
+            ] = str(Path(resource["target"]).resolve())
+        return env_settings
 
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
@@ -354,11 +392,13 @@ class ScenarioGenerator:
 
             self.normalize_compose_services(dest)
 
-            self._config_containers[project_name] = {
+            config_container = {
                 'name': f'{project_name}-config',
                 'image': full_image,
-                'init_command': init_command
+                'init_command': init_command,
+                'overrides': [],
             }
+            self._config_containers[project_name] = config_container
             print(f"Extracted {src} → {dest}")
             return str(dest)
 
@@ -401,6 +441,7 @@ class ScenarioGenerator:
 
     def _compose_files(self, component: Dict, project_name: str) -> List[str]:
         compose_files = [self._base_compose(component, project_name)]
+        self._stage_config_overrides(component, project_name)
         compose_files.extend(
             self._resolve_compose_path(path)
             for path in component.get('COMPOSE_OVERRIDES', [])
@@ -413,9 +454,11 @@ class ScenarioGenerator:
         return compose_files
 
     def _generate_cdasim_network_override(
-        self, vehicles: List[Dict[str, Any]]
+        self,
+        vehicles: List[Dict[str, Any]],
+        streets: List[Dict[str, Any]],
     ) -> Optional[str]:
-        """Attach CDASim to every Platform and Messenger private network."""
+        """Attach CDASim to vehicle networks and the shared street network."""
 
         service_networks = {}
         networks = {}
@@ -428,16 +471,41 @@ class ScenarioGenerator:
                 "name": settings["PRIVATE_NETWORK_NAME"],
             }
 
+        if streets:
+            network_key = "streets_shared"
+            street_network_name = streets[0]["settings"][
+                "STREET_NETWORK_NAME"
+            ]
+            service_networks[network_key] = {
+                "aliases": ["cdasim"],
+            }
+            evc_aliases = [
+                street["settings"]["EVC_SIM_HOST"]
+                for street in streets
+                if "EVC_SIM_HOST" in street["settings"]
+            ]
+            evc_network = {}
+            if evc_aliases:
+                evc_network["aliases"] = evc_aliases
+            networks[network_key] = {
+                "external": True,
+                "name": street_network_name,
+            }
+
         if not networks:
             return None
+
+        services = {"cdasim": {"networks": service_networks}}
+        if streets:
+            services["econolite-virtual-controller"] = {
+                "networks": {"streets_shared": evc_network}
+            }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"
         override_path.write_text(
             yaml.safe_dump(
                 {
-                    "services": {
-                        "cdasim": {"networks": service_networks}
-                    },
+                    "services": services,
                     "networks": networks,
                 },
                 sort_keys=False,
@@ -614,7 +682,8 @@ class ScenarioGenerator:
         cd = es['cdasim']
         compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
         private_network_override = self._generate_cdasim_network_override(
-            es.get('vehicles', [])
+            es.get('vehicles', []),
+            es.get('streets', []),
         )
         if private_network_override:
             compose_files.append(private_network_override)
@@ -675,6 +744,7 @@ class ScenarioGenerator:
         # Streets
         for i, s in enumerate(es.get('streets', []), 1):
             compose_files = self._compose_files(s, s['PROJECT_NAME'])
+            compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],
@@ -682,7 +752,7 @@ class ScenarioGenerator:
                 'compose_files': compose_files,
                 'env_file': env_file,
                 'platform_net': None,
-                'street_net': f"{s['PROJECT_NAME']}_street_net",
+                'street_net': s['settings']['STREET_NETWORK_NAME'],
                 'project_directory': f"{self.tmp_dir}/"
             })
 
@@ -693,6 +763,62 @@ class ScenarioGenerator:
             'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
+
+    def _stage_config_overrides(
+        self, component: Dict[str, Any], project_name: str
+    ) -> None:
+        """Overlay repository files onto an extracted config image."""
+
+        overrides = component.get('CONFIG_OVERRIDES', {})
+        if not overrides:
+            return
+        if not isinstance(overrides, dict):
+            raise ValueError(f"CONFIG_OVERRIDES for {project_name} must be a mapping")
+
+        compose_path = component.get('CONFIG_COMPOSE_PATH')
+        config_container = self._config_containers.get(project_name)
+        if not compose_path or not config_container:
+            raise ValueError(
+                f"CONFIG_OVERRIDES for {project_name} requires a config image "
+                "and CONFIG_COMPOSE_PATH"
+            )
+
+        source_root = CONFIG_DIRECTORY.resolve()
+        local_root = (self.tmp_dir / f"config-{project_name}").resolve()
+        container_root = Path(compose_path).parent
+        for target_name, source_name in overrides.items():
+            if not all(
+                isinstance(value, str) and value
+                for value in (target_name, source_name)
+            ):
+                raise ValueError(
+                    f"Invalid CONFIG_OVERRIDES entry for {project_name}"
+                )
+
+            source = (source_root / source_name).resolve()
+            target = (local_root / target_name).resolve()
+            try:
+                source.relative_to(source_root)
+                relative_target = target.relative_to(local_root)
+            except ValueError as exc:
+                raise ValueError(
+                    f"CONFIG_OVERRIDES paths for {project_name} must stay "
+                    "inside their config directories"
+                ) from exc
+            if not source.is_file() or not target.is_file():
+                raise FileNotFoundError(
+                    f"Invalid CONFIG_OVERRIDES file for {project_name}: "
+                    f"{source} → {target}"
+                )
+
+            shutil.copy2(source, target)
+            config_container['overrides'].append(
+                {
+                    'source': str(target),
+                    'target': str(container_root / relative_target),
+                }
+            )
+            print(f"Staged {source} → {target} for {project_name}")
 
     # --------------------------------------------------------------------- #
     # 5. Generate sim_start.sh
@@ -736,7 +862,9 @@ class ScenarioGenerator:
             self._generate_cdasim_runtime_with_ns3_image(es['cdasim'])
 
         # Generate .env files
-        self.generate_env_file('.env.cdasim', es['cdasim'])
+        self.generate_env_file(
+            '.env.cdasim', self._cdasim_env_settings(es['cdasim'])
+        )
         if es.get('carma_cloud'):
             self.generate_env_file('.env.carma_cloud', es['carma_cloud'])
         for i, v in enumerate(es.get('vehicles', []), 1):
