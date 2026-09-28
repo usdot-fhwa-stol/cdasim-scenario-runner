@@ -16,6 +16,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -36,6 +37,7 @@ STREET_NETWORK_OVERRIDE_PATH = (
     / "compose"
     / "street-network.override.yml"
 )
+CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
 
 
 class ScenarioGenerator:
@@ -78,7 +80,7 @@ class ScenarioGenerator:
             compose_root if compose_root is not None else self.config_path.parent
         ).resolve()
         self.data: Dict[str, Any] = {}  # will hold scenario + temp_dir
-        self._config_containers: Dict[str, Dict[str, str]] = {}
+        self._config_containers: Dict[str, Dict[str, Any]] = {}
 
     # --------------------------------------------------------------------- #
     # 1. Load config + create ./tmp/
@@ -390,11 +392,13 @@ class ScenarioGenerator:
 
             self.normalize_compose_services(dest)
 
-            self._config_containers[project_name] = {
+            config_container = {
                 'name': f'{project_name}-config',
                 'image': full_image,
-                'init_command': init_command
+                'init_command': init_command,
+                'overrides': [],
             }
+            self._config_containers[project_name] = config_container
             print(f"Extracted {src} → {dest}")
             return str(dest)
 
@@ -437,6 +441,7 @@ class ScenarioGenerator:
 
     def _compose_files(self, component: Dict, project_name: str) -> List[str]:
         compose_files = [self._base_compose(component, project_name)]
+        self._stage_config_overrides(component, project_name)
         compose_files.extend(
             self._resolve_compose_path(path)
             for path in component.get('COMPOSE_OVERRIDES', [])
@@ -758,6 +763,62 @@ class ScenarioGenerator:
             'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
+
+    def _stage_config_overrides(
+        self, component: Dict[str, Any], project_name: str
+    ) -> None:
+        """Overlay repository files onto an extracted config image."""
+
+        overrides = component.get('CONFIG_OVERRIDES', {})
+        if not overrides:
+            return
+        if not isinstance(overrides, dict):
+            raise ValueError(f"CONFIG_OVERRIDES for {project_name} must be a mapping")
+
+        compose_path = component.get('CONFIG_COMPOSE_PATH')
+        config_container = self._config_containers.get(project_name)
+        if not compose_path or not config_container:
+            raise ValueError(
+                f"CONFIG_OVERRIDES for {project_name} requires a config image "
+                "and CONFIG_COMPOSE_PATH"
+            )
+
+        source_root = CONFIG_DIRECTORY.resolve()
+        local_root = (self.tmp_dir / f"config-{project_name}").resolve()
+        container_root = Path(compose_path).parent
+        for target_name, source_name in overrides.items():
+            if not all(
+                isinstance(value, str) and value
+                for value in (target_name, source_name)
+            ):
+                raise ValueError(
+                    f"Invalid CONFIG_OVERRIDES entry for {project_name}"
+                )
+
+            source = (source_root / source_name).resolve()
+            target = (local_root / target_name).resolve()
+            try:
+                source.relative_to(source_root)
+                relative_target = target.relative_to(local_root)
+            except ValueError as exc:
+                raise ValueError(
+                    f"CONFIG_OVERRIDES paths for {project_name} must stay "
+                    "inside their config directories"
+                ) from exc
+            if not source.is_file() or not target.is_file():
+                raise FileNotFoundError(
+                    f"Invalid CONFIG_OVERRIDES file for {project_name}: "
+                    f"{source} → {target}"
+                )
+
+            shutil.copy2(source, target)
+            config_container['overrides'].append(
+                {
+                    'source': str(target),
+                    'target': str(container_root / relative_target),
+                }
+            )
+            print(f"Staged {source} → {target} for {project_name}")
 
     # --------------------------------------------------------------------- #
     # 5. Generate sim_start.sh

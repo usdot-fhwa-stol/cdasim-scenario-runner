@@ -202,6 +202,11 @@ docker network create --driver {{ network.driver }}{% if network.subnet is defin
 
 {% for config_container in config_containers %}
 docker run --name "{{ config_container.name }}" --entrypoint sh "{{ config_container.image }}" -c '{{ config_container.init_command }}'
+{% for override in config_container.overrides %}
+docker cp \
+    {{ shell_quote(override.source) }} \
+    {{ shell_quote(config_container.name ~ ':' ~ override.target) }}
+{% endfor %}
 {% endfor %}
 
 

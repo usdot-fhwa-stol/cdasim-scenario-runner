@@ -36,6 +36,8 @@ test_cases:
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
@@ -93,6 +95,8 @@ test_cases:
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
@@ -115,6 +119,8 @@ test_cases:
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0

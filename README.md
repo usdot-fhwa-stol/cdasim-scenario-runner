@@ -101,6 +101,18 @@ directory under `config/cdasim` to either one file name or a list of file
 names. Scenario Runner stages every listed file into the matching directory
 under `tmp` before Compose starts.
 
+For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
+to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario
+Runner overlays each file onto the extracted configuration under `tmp`, then
+copies it into that deployment's config volume before Compose starts. For
+example:
+
+```yaml
+CONFIG_OVERRIDES:
+  VehicleConfigParams.yaml: vehiclecfg/carma_1_veh_config.yaml
+  drivers.launch.py: vehiclecfg/carma_1_drivers.launch.py
+```
+
 `START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
 string. Scenario Runner normalizes it to a floating-point value because the
 CARMA-CARLA ROS 2 node declares `start_delay_in_seconds` as a double parameter.
