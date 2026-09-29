@@ -38,7 +38,6 @@ STREET_NETWORK_OVERRIDE_PATH = (
     / "street-network.override.yml"
 )
 CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
-DEFAULT_CONFIG_OVERRIDE_DIRECTORY = CONFIG_DIRECTORY / "vehiclecfg"
 
 
 class ScenarioGenerator:
@@ -809,13 +808,7 @@ class ScenarioGenerator:
                     f"Invalid CONFIG_OVERRIDES entry for {project_name}"
                 )
 
-            source_path = Path(source_name)
-            source_directory = (
-                DEFAULT_CONFIG_OVERRIDE_DIRECTORY
-                if len(source_path.parts) == 1
-                else source_root
-            )
-            source = (source_directory / source_path).resolve()
+            source = (source_root / source_name).resolve()
             target = (local_root / target_name).resolve()
             try:
                 source.relative_to(source_root)
