@@ -4,7 +4,7 @@
 
 test_cases:
   - label: town10_single_vehicle
-    runtime_seconds: 90
+    runtime_seconds: 600
     MAP: Town10
 
     env_settings:
@@ -34,7 +34,7 @@ test_cases:
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
           CONFIG_OVERRIDES:
-            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
+            VehicleConfigParams.yaml: speed_limit_20.yaml
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
@@ -59,7 +59,7 @@ test_cases:
         rosbags: /opt/carma/logs
 
   - label: town10_two_vehicles
-    runtime_seconds: 300
+    runtime_seconds: 600
     MAP: Town10
 
     env_settings:
@@ -95,7 +95,7 @@ test_cases:
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
           CONFIG_OVERRIDES:
-            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
+            VehicleConfigParams.yaml: speed_limit_25.yaml
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
@@ -119,7 +119,7 @@ test_cases:
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
           CONFIG_OVERRIDES:
-            VehicleConfigParams.yaml: vehiclecfg/VehicleConfigParams.yaml
+            VehicleConfigParams.yaml: speed_limit_30.yaml
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
