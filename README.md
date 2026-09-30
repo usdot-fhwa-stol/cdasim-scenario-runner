@@ -64,6 +64,7 @@ between Compose projects. Its top-level sections are:
 
 3. **Run Simulation**
    - The generated start script installs the selected map as `/opt/carma/maps/vector_map.osm` and copies missing vehicle routes into `/opt/carma/routes` before starting containers. A different existing vector map is preserved as the next available `backup_{number}.osm`; existing route files are left unchanged.
+   - Because CDASim launches `carlasim/carla:0.10.0` dynamically through the host Docker socket, the start script verifies that image separately and pulls it when it is not available locally. A pull failure stops startup before any scenario services are launched.
    - The system executes `bash sim_start.sh` to bring up all simulation containers and networks.
    - Containers run concurrently for the duration defined by `runtime_seconds`.
    - Once the time elapses, or if a timeout occurs, `bash sim_stop.sh` is executed to gracefully stop the environment.

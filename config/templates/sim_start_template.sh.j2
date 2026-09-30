@@ -125,6 +125,25 @@ prepare_docker_socket() {
     export DOCKER_SOCKET_GID
 }
 
+# Ensure a Docker image that is launched dynamically by a runtime container is
+# available before starting the scenario. Docker Compose cannot pull the CARLA
+# image because CDASim launches it later through the host Docker socket.
+# Usage: prepare_docker_image "repository/image:tag"
+prepare_docker_image() {
+    local image="$1"
+
+    if docker image inspect "$image" >/dev/null 2>&1; then
+        echo "Using local image: $image"
+        return
+    fi
+
+    echo "Pulling missing runtime image: $image"
+    if ! docker pull "$image"; then
+        echo "Error: Could not pull required runtime image $image." >&2
+        exit 1
+    fi
+}
+
 stage_map_file \
     {{ shell_quote(scenario_resources.map_file.source) }} \
     {{ shell_quote(scenario_resources.map_file.target) }} \
@@ -186,6 +205,10 @@ prepare_docker_socket() {
 
 #  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
 prepare_docker_socket
+
+# CARLA is launched dynamically by CDASim rather than as a Compose service, so
+# prepare it explicitly and fail before starting the scenario if it is missing.
+prepare_docker_image "carlasim/carla:0.10.0"
 
 echo "Pulling scenario runtime images..."
 {% for c in scenario %}
