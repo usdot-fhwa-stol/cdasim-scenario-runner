@@ -25,7 +25,7 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           CDASIM_RESOURCES:
-            sumocfg: Town10_client_1.sumocfg
+            sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
