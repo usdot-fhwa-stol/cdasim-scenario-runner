@@ -11,6 +11,7 @@
     </input>
     <gui_only>
         <tracker-interval value="0.1"/>
+        <start value="true"/>
     </gui_only>
     <time>
         <step-length value="0.1"/>
