@@ -101,15 +101,15 @@ directory under `config/cdasim` to either one file name or a list of file
 names. Scenario Runner stages every listed file into the matching directory
 under `tmp` before Compose starts.
 
-EVC is an optional CDASim service. Configure its lifecycle once under the
-CDASim deployment rather than on individual Street instances:
+EVC is an optional CDASim service. Enable its Compose profile under the CDASim
+deployment rather than configuring it on individual Street instances:
 
 ```yaml
 COMPOSE_OVERRIDES:
   - ../compose/cdasim-town10-evc.override.yml
 settings:
-  EVC:
-    enable: false
+  COMPOSE_PROFILES:
+    - evc
   CDASIM_RESOURCES:
     pyeos_db: .pyeos.db
     evc_sumo:
@@ -117,11 +117,12 @@ settings:
       - tl_189.cfg
 ```
 
-When enabled, Scenario Runner activates the Compose `evc` profile and attaches
-the controller to the shared Street network with the `evc` alias. Street
-entries do not control whether EVC starts. The EVC configuration remains
-declared in the scenario YAML when disabled, but its resources are not
-resolved, validated, or staged, and its profiled service does not run.
+Docker Compose activates the `evc` profile from `COMPOSE_PROFILES`, and the
+controller attaches to the shared Street network with the `evc` alias. Street
+entries do not control whether EVC starts. When EVC is not needed, omit the
+`evc` profile, its Compose override, and its entries under `CDASIM_RESOURCES`;
+Scenario Runner only resolves, validates, and stages resources declared by the
+test case.
 
 For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
 to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario

@@ -31,7 +31,6 @@ INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
 CDASIM_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "cdasim"
-EVC_RESOURCE_NAMES = frozenset({"evc_sumo", "pyeos_db"})
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
 SIMULATION_TMP_DIRECTORY = Path("/opt/carma-simulation/tmp")
@@ -186,19 +185,12 @@ class ScenarioRunner:
             )
         # Setup CDA Sim Resources
         cdasim_configs = []
-        cdasim_settings = (
+        cdasim_resources = (
             case.get("env_settings", {})
             .get("cdasim", {})
             .get("settings", {})
+            .get("CDASIM_RESOURCES", {})
         )
-        cdasim_resources = dict(cdasim_settings.get("CDASIM_RESOURCES", {}))
-        evc = cdasim_settings.get("EVC") or {}
-        if not bool(evc.get("enable", False)):
-            cdasim_resources = {
-                name: files
-                for name, files in cdasim_resources.items()
-                if name not in EVC_RESOURCE_NAMES
-            }
         for resource_name, configured_files in cdasim_resources.items():
             if isinstance(configured_files, str):
                 resource_files = [configured_files]
