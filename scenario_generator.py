@@ -147,7 +147,6 @@ class ScenarioGenerator:
             **cdasim,
             "settings": dict(cdasim.get("settings", {})),
         }
-        settings = env_settings["settings"]
         cdasim_resources = self.config.get("scenario_resources", {}).get(
             "cdasim_configs", []
         )
@@ -157,7 +156,7 @@ class ScenarioGenerator:
             ).strip("_").upper()
             if not resource_name:
                 raise ValueError("CDASim resource name cannot be empty")
-            settings[
+            env_settings["settings"][
                 f"{resource_name}_RESOURCE_PATH"
             ] = str(Path(resource["target"]).resolve())
         return env_settings
@@ -458,7 +457,7 @@ class ScenarioGenerator:
         self,
         vehicles: List[Dict[str, Any]],
         streets: List[Dict[str, Any]],
-    ) -> str:
+    ) -> Optional[str]:
         """Configure CDASim networks and the optional EVC service."""
 
         service_networks = {}
@@ -485,16 +484,19 @@ class ScenarioGenerator:
                 "name": street_network_name,
             }
 
+        if not networks:
+            return None
+
         services = {}
         if service_networks:
             services["cdasim"] = {"networks": service_networks}
 
-        evc_service = {"profiles": ["evc"]}
         if streets:
-            evc_service["networks"] = {
-                "streets_shared": {"aliases": ["evc"]}
+            services["econolite-virtual-controller"] = {
+                "networks": {
+                    "streets_shared": {"aliases": ["evc"]}
+                }
             }
-        services["econolite-virtual-controller"] = evc_service
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"
         override_path.write_text(
