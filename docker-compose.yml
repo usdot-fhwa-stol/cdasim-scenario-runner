@@ -54,6 +54,8 @@ services:
       - --carla-host=carla-server
       - "--host=0.0.0.0"
   econolite-virtual-controller:
+    profiles:
+      - evc
     # Using latest tag will always attempt to pull from remote ignoring any cli params.
     # Will fail if no remote image exists
     image: usdotfhwastol/econolite-virtual-controller:save
