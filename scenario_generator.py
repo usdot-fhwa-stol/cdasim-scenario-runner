@@ -505,6 +505,18 @@ class ScenarioGenerator:
         if es.get('carma_cloud'):
             self.generate_env_file('.env.carma_cloud', es['carma_cloud'])
         for i, v in enumerate(es.get('vehicles', []), 1):
+            if (
+                v.get('COMPONENT', 'platform') == 'platform'
+                and v.get('CONFIG_COMPOSE_PATH')
+            ):
+                v.setdefault('settings', {}).setdefault(
+                    'VEHICLE_CALIBRATION_PATH',
+                    str(
+                        self.tmp_dir
+                        / f"config-{v['PROJECT_NAME']}"
+                        / 'calibration'
+                    ),
+                )
             self.generate_env_file(f'.env.vehicle_{i}', v)
         for i, s in enumerate(es.get('streets', []), 1):
             self.generate_env_file(f'.env.street_{i}', s)
