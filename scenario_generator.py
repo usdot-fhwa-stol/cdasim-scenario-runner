@@ -471,8 +471,7 @@ class ScenarioGenerator:
         self,
         vehicles: List[Dict[str, Any]],
         streets: List[Dict[str, Any]],
-        evc_enabled: bool,
-    ) -> str:
+    ) -> Optional[str]:
         """Configure CDASim networks and the optional EVC service."""
 
         service_networks = {}
@@ -503,10 +502,15 @@ class ScenarioGenerator:
         if service_networks:
             services["cdasim"] = {"networks": service_networks}
 
-        evc_service = {"profiles": ["evc"]}
-        if streets and evc_enabled:
-            evc_service["networks"] = {
-                "streets_shared": {"aliases": ["evc"]}
+        services = {}
+        if service_networks:
+            services["cdasim"] = {"networks": service_networks}
+
+        if streets:
+            services["econolite-virtual-controller"] = {
+                "networks": {
+                    "streets_shared": {"aliases": ["evc"]}
+                }
             }
         services["econolite-virtual-controller"] = evc_service
 
