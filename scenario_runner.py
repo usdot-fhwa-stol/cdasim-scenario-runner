@@ -190,7 +190,6 @@ class ScenarioRunner:
             .get("cdasim", {})
             .get("settings", {})
         )
-        
         for resource_name, configured_files in cdasim_resources.items():
             if isinstance(configured_files, str):
                 resource_files = [configured_files]
@@ -512,7 +511,6 @@ class ScenarioRunner:
         self._prepare_host_directories(case)
 
         protected_directories = self._host_directories(case)
-
         print("Clearing source log directories...")
         self.collector.clear_sources(case, protected_directories)
 

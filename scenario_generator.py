@@ -419,14 +419,13 @@ class ScenarioGenerator:
         project_name: str,
         calibration_path: Optional[str]
     ) -> None:
-        """Copy vehicle calibration data out of a config image into tmp/.
+        """Copy vehicle calibration data out of carma-config image into a tmp dir.
 
         Args:
-            container_name: Container created from the config image.
-            project_name: config version the calibration data belongs to.
-            calibration_path: Directory inside the image holding the
-                calibration dir, or ``None`` to use
-                ``CONFIG_CALIBRATION_SOURCE``.
+        container_name: Container created from the config image.
+        project_name: config version the calibration data belongs to.
+        calibration_path: Directory inside the image holding the
+        calibration dir, or ``None`` to use ``CONFIG_CALIBRATION_SOURCE``.
 
         A config image that includes no calibration directory will not result in an error;
         the component will instead keep whatever its compose file already mounts.
