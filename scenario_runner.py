@@ -189,6 +189,7 @@ class ScenarioRunner:
             case.get("env_settings", {})
             .get("cdasim", {})
             .get("settings", {})
+            .get("CDASIM_RESOURCES", {})
         )
         for resource_name, configured_files in cdasim_resources.items():
             if isinstance(configured_files, str):

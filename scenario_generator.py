@@ -161,7 +161,7 @@ class ScenarioGenerator:
             ).strip("_").upper()
             if not resource_name:
                 raise ValueError("CDASim resource name cannot be empty")
-            settings[
+            env_settings["settings"][
                 f"{resource_name}_RESOURCE_PATH"
             ] = str(Path(resource["target"]).resolve())
         return env_settings
@@ -484,7 +484,7 @@ class ScenarioGenerator:
                 f"{self.CALIBRATION_TARGET}; staged calibration data unused."
             )
             return None
-
+            
         override_path = self.tmp_dir / f"{project_name}-calibration.yml"
         override_path.write_text(
             yaml.safe_dump({'services': services}, sort_keys=False),
