@@ -279,14 +279,34 @@ class ScenarioRunner:
                                 )
                 target_folder_name = resource_name + "_" + infra_name
                 target = self.tmp_dir / target_folder_name
-                infrastructure_configs.append(
-                    {
-                        "source": str(source),
-                        "target": str(target),
-                        "name": str(resource_name),
-                        "infrastructure": str(infra_name)
+                resource = {
+                    "source": str(source),
+                    "target": str(target),
+                    "name": str(resource_name),
+                    "infrastructure": str(infra_name)
+                }
+                if resource_name == "sensor":
+                    spawn_position = settings.get("SPAWN_POSITION", {})
+                    if "x" not in spawn_position or "y" not in spawn_position:
+                        raise ValueError(
+                            f"SPAWN_POSITION.x and SPAWN_POSITION.y are required "
+                            f"for sensor configuration on {infra_name}"
+                        )
+                    sensor_settings = settings.get("SENSORS") or {}
+                    sensor_id = sensor_settings.get("sensor_id")
+                    sensor_type = sensor_settings.get("type")
+                    if not sensor_id or not sensor_type:
+                        raise ValueError(
+                            "SENSORS.sensor_id and SENSORS.type are required "
+                            f"for {infra_name}"
+                        )
+                    resource["sensor_id"] = str(sensor_id)
+                    resource["sensor_type"] = str(sensor_type)
+                    resource["spawn_position"] = {
+                        "x": spawn_position["x"],
+                        "y": spawn_position["y"],
                     }
-                )
+                infrastructure_configs.append(resource)
 
         return {
             "map_file": {

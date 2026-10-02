@@ -1,0 +1,6 @@
+services:
+  v2xhub:
+    volumes:
+      - type: bind
+        source: "${SENSOR_JSON_RESOURCE_PATH:?SENSOR_JSON_RESOURCE_PATH is required}"
+        target: /var/www/download

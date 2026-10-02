@@ -65,10 +65,10 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
             SENSORS:
-              enable: false
               sensor_id: lidar_1
-              type: SemanticLidarSensor
+              type: SemanticLidar
             SPAWN_POSITION:
               x: 64.17
               y: 1.55
@@ -170,10 +170,6 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
-            SENSORS:
-              enable: false
-              sensor_id: lidar_1
-              type: SemanticLidarSensor
             SPAWN_POSITION:
               x: 64.17
               y: 1.55
@@ -300,10 +296,6 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
-            SENSORS:
-              enable: false
-              sensor_id: lidar_1
-              type: SemanticLidarSensor
             SPAWN_POSITION:
               x: 64.17
               y: 1.55
