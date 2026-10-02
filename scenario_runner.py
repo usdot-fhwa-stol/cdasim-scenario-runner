@@ -31,11 +31,9 @@ INFRASTRUCTURE_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "infrastructure"
 MAP_DIRECTORY = CONFIG_DIRECTORY / "maps"
 ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
 CDASIM_CONFIG_DIRECTORY =  CONFIG_DIRECTORY / "cdasim"
-VEHICLE_CALIBRATION_DIRECTORY = CONFIG_DIRECTORY / "vehicle_calibration"
 EVC_RESOURCE_NAMES = frozenset({"evc_sumo", "pyeos_db"})
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
-VEHICLE_CALIBRATION_TARGET_DIRECTORY=Path("/opt/carma/vehicle")
 SIMULATION_TMP_DIRECTORY = Path("/opt/carma-simulation/tmp")
 SIMULATION_LOG_DIRECTORY = Path("/opt/carma-simulation/logs")
 CARLA_SENSOR_LIB_LOG_DIRECTORY = Path("/opt/carla-sensor-lib")
@@ -52,7 +50,6 @@ ALLOWED_HOST_DIRECTORY_ROOTS = (
     CARMA_LOG_DIRECTORY,
     MAP_TARGET_DIRECTORY,
     ROUTE_TARGET_DIRECTORY,
-    VEHICLE_CALIBRATION_TARGET_DIRECTORY,
     V2XHUB_DIRECTORY,
     LEGACY_V2XHUB_LOG_DIRECTORY,
 )
@@ -454,29 +451,6 @@ class ScenarioRunner:
             self._prepare_host_directory(directory)
             print(f"Prepared {directory}")
 
-    @staticmethod
-    def _link_vehicle_calibration() -> None:
-        """Link repository vehicle calibration data into the host CARMA directory.
-
-        ``config/vehicle_calibration`` is symlinked as ``/opt/carma/vehicle``
-        so the carma-platform Compose file bind-mounts the repository copy.
-        Anything already present at the target path is used as is.
-        """
-
-        if not VEHICLE_CALIBRATION_DIRECTORY.is_dir():
-            raise FileNotFoundError(
-                f"Vehicle calibration directory not found at "
-                f"{VEHICLE_CALIBRATION_DIRECTORY}"
-            )
-
-        target = VEHICLE_CALIBRATION_TARGET_DIRECTORY
-        if target.is_symlink() or target.exists():
-            print(f"Using existing vehicle calibration at {target}")
-            return
-
-        target.symlink_to(VEHICLE_CALIBRATION_DIRECTORY)
-        print(f"Linked {VEHICLE_CALIBRATION_DIRECTORY} → {target}")
-
     def _run_one(self, idx: int, case: dict) -> tuple[Path | None, dict] | None:
         """Generate, execute, stop, and collect data for one test case.
 
@@ -544,9 +518,6 @@ class ScenarioRunner:
 
         print("Preparing host directories...")
         self._prepare_host_directories(case)
-
-        print("Linking vehicle calibration data...")
-        self._link_vehicle_calibration()
 
         protected_directories = self._host_directories(case)
 
