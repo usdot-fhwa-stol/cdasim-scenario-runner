@@ -132,9 +132,14 @@ example:
 
 ```yaml
 CONFIG_OVERRIDES:
-  VehicleConfigParams.yaml: vehiclecfg/carma_1_veh_config.yaml
-  drivers.launch.py: vehiclecfg/carma_1_drivers.launch.py
+  VehicleConfigParams.yaml: carma_1_veh_config.yaml
+  drivers.launch.py: carma_1_drivers.launch.py
 ```
+
+A source value containing only a file name is resolved under
+`config/vehiclecfg`. An explicit source path containing a directory remains
+relative to `config`, so `other/config.yaml` resolves to
+`config/other/config.yaml`.
 
 `START_DELAY_IN_SECONDS` may be provided as an integer, float, or numeric
 string. Scenario Runner normalizes it to a floating-point value because the
