@@ -50,7 +50,7 @@ class ScenarioGenerator:
     CONFIG_INIT_COMMAND = (
         "cp -a /root/vehicle/config/. /opt/carma/vehicle/config/"
     )
-    CONFIG_CALIBRATION_SOURCE = "/root/vehicle/calibration"
+    CONFIG_CALIBRATION_SOURCE = "/root/vehicle/config/calibration"
     CALIBRATION_TARGET = "/opt/carma/vehicle/calibration"
     MESSENGER_V2X_PARAMS_TARGET = (
         "/opt/carma/install/v2x_ros_driver/share/"
@@ -433,15 +433,16 @@ class ScenarioGenerator:
         """
 
         source = calibration_path or self.CONFIG_CALIBRATION_SOURCE
-        dest = self.tmp_dir / f"config-{project_name}" / "calibration"
-        dest.mkdir(parents=True, exist_ok=True)
+        dest = self.tmp_dir / f"calibration-{project_name}"
+        shutil.rmtree(dest, ignore_errors=True)
+        dest.mkdir(parents=True)
         result = subprocess.run(
             ["docker", "cp", f"{container_name}:{source}/.", str(dest)],
             capture_output=True,
             text=True
         )
         if result.returncode != 0:
-            dest.rmdir()
+            shutil.rmtree(dest, ignore_errors=True)
             print(
                 f"No calibration data at {source} in the {project_name} "
                 f"config image; leaving its compose volumes unchanged."
@@ -578,7 +579,9 @@ class ScenarioGenerator:
                 "external": True,
                 "name": street_network_name,
             }
-
+        
+        if not networks:
+            return None
         services = {}
         if service_networks:
             services["cdasim"] = {"networks": service_networks}
