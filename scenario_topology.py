@@ -8,6 +8,7 @@
 
 from copy import deepcopy
 import json
+import math
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
 TMP_DIR = Path(__file__).resolve().parent / "tmp" 
@@ -163,6 +164,31 @@ def _spawn_point(settings):
         )
 
 
+def _normalize_start_delay(vehicle: Dict[str, Any]) -> None:
+    settings = vehicle.get("settings", {})
+    if "START_DELAY_IN_SECONDS" not in settings:
+        return
+    value = settings["START_DELAY_IN_SECONDS"]
+    name = settings.get("VEHICLE_ID", vehicle.get("PROJECT_NAME", "unknown"))
+    if isinstance(value, bool):
+        raise ValueError(
+            f"START_DELAY_IN_SECONDS for vehicle {name} must be numeric, "
+            f"not {value!r}"
+        )
+    try:
+        value = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            f"START_DELAY_IN_SECONDS for vehicle {name} must be numeric, "
+            f"not {value!r}"
+        ) from exc
+    if not math.isfinite(value):
+        raise ValueError(
+            f"START_DELAY_IN_SECONDS for vehicle {name} must be finite"
+        )
+    settings["START_DELAY_IN_SECONDS"] = value
+
+
 def _apply_vehicle_topology(
     vehicles: List[Dict[str, Any]],
     topology: ScenarioTopologyAllocator,
@@ -187,6 +213,7 @@ def _apply_vehicle_topology(
         vehicle_indexes[component] += 1
         index = vehicle_indexes[component]
         settings = vehicle["settings"]
+        _normalize_start_delay(vehicle)
         _spawn_point(settings)
         allocation = (
             topology.allocate_vehicle(index)

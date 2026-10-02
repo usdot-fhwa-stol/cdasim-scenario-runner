@@ -2,5 +2,6 @@ services:
   v2xhub:
     volumes:
       - type: bind
-        source: "${SENSOR_JSON_RESOURCE_PATH:?SENSOR_JSON_RESOURCE_PATH is required}"
-        target: /var/www/download
+        source: "${SENSOR_RESOURCE_PATH:?SENSOR_RESOURCE_PATH is required}/sensors.json"
+        target: /var/www/download/sensors.json
+        read_only: true

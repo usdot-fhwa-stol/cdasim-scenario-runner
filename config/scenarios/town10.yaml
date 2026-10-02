@@ -56,7 +56,8 @@ test_cases:
       streets:
         - PROJECT_NAME: street_1
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
-          COMPOSE_OVERRIDES: []
+          COMPOSE_OVERRIDES:
+            - ../compose/street-sensor-json.override.yml
           settings:
             STOL_ORG: usdotfhwastoldev
             STOL_TAG: develop

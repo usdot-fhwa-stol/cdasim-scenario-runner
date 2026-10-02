@@ -13,16 +13,15 @@
 #  the License.
 
 import json
-import os
 import re
 import shlex
-import shutil
-import subprocess
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import yaml
 from jinja2 import Template
+from compose_manager import ComposeManager
+from scenario_resources import ScenarioResourceManager
 
 
 CDASIM_RUNTIME_TEMPLATE_PATH = (
@@ -37,14 +36,6 @@ STREET_NETWORK_OVERRIDE_PATH = (
     / "compose"
     / "street-network.override.yml"
 )
-STREET_SENSOR_OVERRIDE_PATH = (
-    Path(__file__).resolve().parent
-    / "config"
-    / "compose"
-    / "street-sensor-json.override.yml"
-)
-CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
-DEFAULT_CONFIG_OVERRIDE_DIRECTORY = CONFIG_DIRECTORY / "vehiclecfg"
 
 
 class ScenarioGenerator:
@@ -53,22 +44,10 @@ class ScenarioGenerator:
     All files go into ./tmp/ (full paths).
     """
 
-    CONFIG_INIT_COMMAND = (
-        "cp -a /root/vehicle/config/. /opt/carma/vehicle/config/"
-    )
-    MESSENGER_V2X_PARAMS_TARGET = (
+    V2X_PARAMS_TARGET = (
         "/opt/carma/install/v2x_ros_driver/share/"
         "v2x_ros_driver/config/params.yaml"
     )
-    PLATFORM_V2X_PARAMS_TARGET = MESSENGER_V2X_PARAMS_TARGET
-    LEGACY_SERVICE_ALIASES = {
-        "carma-simulation": "cdasim",
-        "platform": "platform_ros1",
-        "msger_roscore": "messenger_roscore",
-        "msger_ros1_bridge": "messenger_ros1_bridge",
-        "v2x_ros_driver": "v2x-ros-driver",
-        "messenger_v2x_ros_driver": "messenger-v2x-ros-driver",
-    }
 
     def __init__(
         self,
@@ -83,11 +62,12 @@ class ScenarioGenerator:
         self.stop_template = Path(stop_template)
         self.config: Dict[str, Any] = {}
         self.tmp_dir: Path = Path(tmp_dir).resolve()
-        self.compose_root = Path(
+        compose_root = Path(
             compose_root if compose_root is not None else self.config_path.parent
         ).resolve()
         self.data: Dict[str, Any] = {}  # will hold scenario + temp_dir
-        self._config_containers: Dict[str, Dict[str, Any]] = {}
+        self.compose = ComposeManager(self.tmp_dir, compose_root)
+        self.resource_manager = ScenarioResourceManager(self.tmp_dir)
 
     # --------------------------------------------------------------------- #
     # 1. Load config + create ./tmp/
@@ -140,33 +120,6 @@ class ScenarioGenerator:
         env_path.write_text(content)
         print(f"Generated {env_path}")
         return str(env_path)
-
-    def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
-        """Add absolute staged-resource paths to the CDASim environment.
-
-        Relative bind sources in a Compose OCI artifact resolve against the
-        artifact cache rather than Scenario Runner's temporary directory. The
-        Compose files and scenario-specific overrides consume these variables
-        when mounting resources staged under ``tmp/``.
-        """
-
-        env_settings = {
-            **cdasim,
-            "settings": dict(cdasim.get("settings", {})),
-        }
-        cdasim_resources = self.config.get("scenario_resources", {}).get(
-            "cdasim_configs", []
-        )
-        for resource in cdasim_resources:
-            resource_name = re.sub(
-                r"[^A-Za-z0-9]+", "_", str(resource["name"])
-            ).strip("_").upper()
-            if not resource_name:
-                raise ValueError("CDASim resource name cannot be empty")
-            env_settings["settings"][
-                f"{resource_name}_RESOURCE_PATH"
-            ] = str(Path(resource["target"]).resolve())
-        return env_settings
 
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
@@ -232,233 +185,6 @@ class ScenarioGenerator:
         settings["CDASIM_RUNTIME_FILE"] = str(runtime_path)
         print(f"Generated {runtime_path}")
         return str(runtime_path)
-
-    # --------------------------------------------------------------------- #
-    # 3. Extract docker-compose.yml (once per project)
-    # --------------------------------------------------------------------- #
-    @classmethod
-    def _service_name(cls, name: str) -> str:
-        # Normalize legacy service names by removing trailing digits from old version of cdasim-config
-        # and mapping known aliases
-        base_name = re.sub(r"_\d+$", "", name)
-        return cls.LEGACY_SERVICE_ALIASES.get(base_name, base_name)
-
-    @classmethod
-    def _config_init_command(cls, compose_path: Optional[str]) -> str:
-        """Build the config-volume initialization command from its /opt path."""
-
-        if not compose_path:
-            return cls.CONFIG_INIT_COMMAND
-
-        config_dir = Path(compose_path).parent
-        if config_dir == Path("/opt/carma/vehicle/config"):
-            return cls.CONFIG_INIT_COMMAND
-        try:
-            config_relative_path = config_dir.relative_to("/opt")
-        except ValueError:
-            return cls.CONFIG_INIT_COMMAND
-
-        source_dir = Path("/root") / config_relative_path
-        return f"cp -a {source_dir}/. {config_dir}/"
-
-    @staticmethod
-    def _service_reference(value: str, renames: Dict[str, str]) -> str:
-        # Normalize service references in "service:NAME" or "container:NAME" format
-        if value in renames:
-            return renames[value]
-        parts = value.split(":")
-        if len(parts) >= 2 and parts[0] in ("service", "container"):
-            parts[1] = renames.get(parts[1], parts[1])
-            return ":".join(parts)
-        return value
-
-    @classmethod
-    def normalize_compose_services(cls, compose_path: Path) -> None:
-        """Normalize known legacy service names and direct service references."""
-
-        compose = yaml.safe_load(compose_path.read_text(encoding="utf-8"))
-        services = compose.get("services", {})
-        renames = {name: cls._service_name(name) for name in services}
-        if all(name == renamed for name, renamed in renames.items()):
-            return
-        if len(set(renames.values())) != len(renames):
-            raise ValueError("Legacy Compose service names normalize to duplicates")
-
-        compose["services"] = {
-            renames[name]: service for name, service in services.items()
-        }
-        for service in compose["services"].values():
-            depends_on = service.get("depends_on")
-            if isinstance(depends_on, list):
-                service["depends_on"] = [
-                    renames.get(name, name) for name in depends_on
-                ]
-            elif isinstance(depends_on, dict):
-                service["depends_on"] = {
-                    renames.get(name, name): settings
-                    for name, settings in depends_on.items()
-                }
-
-            network_mode = service.get("network_mode")
-            if isinstance(network_mode, str):
-                service["network_mode"] = cls._service_reference(
-                    network_mode, renames
-                )
-
-            volumes_from = service.get("volumes_from")
-            if isinstance(volumes_from, list):
-                service["volumes_from"] = [
-                    cls._service_reference(reference, renames)
-                    for reference in volumes_from
-                ]
-
-        compose_path.write_text(
-            yaml.safe_dump(compose, sort_keys=False), encoding="utf-8"
-        )
-
-    # --------------------------------------------------------------------- #
-    # Extract base docker-compose.yml from config image 
-    # --------------------------------------------------------------------- #
-    def extract_compose_from_image(
-        self,
-        full_image: str,
-        project_name: str,
-        compose_path: Optional[str] = None,
-        pull_policy: str = 'missing'
-    ) -> str:
-        
-        if not full_image:
-            raise ValueError(f"Missing CONFIG_IMAGE_FULL for {project_name}")
-
-        print(f"Checking config image: {full_image}")
-        inspect = subprocess.run(
-            ["docker", "image", "inspect", full_image],
-            capture_output=True,
-            text=True
-        )
-        if pull_policy == 'always' or (
-            pull_policy == 'missing' and inspect.returncode != 0
-        ):
-            subprocess.run(["docker", "pull", full_image], check=True)
-            print(f"Pulled: {full_image}")
-        elif inspect.returncode != 0:
-            raise RuntimeError(f"Image not found: {full_image}")
-        else:
-            print(f"Using local image: {full_image}")
-
-        cname = f"inspect-{project_name}-{os.urandom(4).hex()}"
-        print(f"Starting inspection container: {cname}")
-        init_command = self._config_init_command(compose_path)
-
-        try:
-            if compose_path:
-                # Populate the config volume recursively instead of relying
-                # on older config-image commands that only copy regular files.
-                subprocess.run(
-                    [
-                        "docker", "run", "--name", cname,
-                        "--entrypoint", "sh", full_image,
-                        "-c", init_command
-                    ],
-                    check=True
-                )
-                src = compose_path
-            else:
-                subprocess.run(
-                    ["docker", "run", "-d", "--name", cname,
-                     full_image, "sleep", "infinity"],
-                    check=True
-                )
-                result = subprocess.run(
-                    ["docker", "exec", cname,
-                     "find", "/", "-type", "f", "-name", "docker-compose.yml"],
-                    capture_output=True, text=True, check=True
-                )
-                files = [f.strip() for f in result.stdout.splitlines() if f.strip()]
-                if len(files) == 0:
-                    raise FileNotFoundError(f"No docker-compose.yml in {full_image}")
-                if len(files) > 1:
-                    raise RuntimeError(
-                        f"Multiple docker-compose.yml in {full_image}: {files}"
-                    )
-                src = files[0]
-
-            if compose_path:
-                dest_dir = self.tmp_dir / f"config-{project_name}"
-                dest_dir.mkdir(parents=True, exist_ok=True)
-                subprocess.run(
-                    ["docker", "cp", f"{cname}:{Path(src).parent}/.", str(dest_dir)],
-                    check=True
-                )
-                dest = dest_dir / Path(src).name
-            else:
-                dest = self.tmp_dir / f"docker-compose-{project_name}.yml"
-                subprocess.run(
-                    ["docker", "cp", f"{cname}:{src}", str(dest)], check=True
-                )
-
-            self.normalize_compose_services(dest)
-
-            config_container = {
-                'name': f'{project_name}-config',
-                'image': full_image,
-                'init_command': init_command,
-                'overrides': [],
-            }
-            self._config_containers[project_name] = config_container
-            print(f"Extracted {src} → {dest}")
-            return str(dest)
-
-        finally:
-            subprocess.run(["docker", "rm", "-fv", cname], capture_output=True)
-
-    def _resolve_compose_path(self, configured_path: str) -> str:
-        path = Path(configured_path)
-        if not path.is_absolute():
-            path = self.compose_root / path
-        return str(path.resolve())
-
-    def _base_compose(self, component: Dict, project_name: str) -> str:
-        """ Resolve the base docker compose file for a component. If COMPOSE_FILE is set,
-        will attempt to resolve file path or pull OCI artifact. If not, will attempt to 
-        extract docker compose from CONFIG_IMAGE_FULL docker image using CONFIG_COMPOSE_PATH
-
-        Args:
-            component (Dict): The component configuration dictionary.
-
-        Returns:
-            str: Resolved path for docker compose file or OCI artifact reference
-
-        """
-        if component.get('COMPOSE_FILE'):
-            compose_file_path = component['COMPOSE_FILE'];
-            # Support OCI docker compose artifact and file path resolution
-            if compose_file_path.startswith('oci://'):
-                return compose_file_path
-            else:
-                # Return absolute file path for compose file from relative path.
-                return self._resolve_compose_path(compose_file_path)
-        # Extract docker compose from config image if COMPOSE_FILE is not set
-        return self.extract_compose_from_image(
-            component.get('CONFIG_IMAGE_FULL'),
-            project_name,
-            component.get('CONFIG_COMPOSE_PATH'),
-            component.get('CONFIG_IMAGE_PULL_POLICY', 'missing')
-        )
-
-    def _compose_files(self, component: Dict, project_name: str) -> List[str]:
-        compose_files = [self._base_compose(component, project_name)]
-        self._stage_config_overrides(component, project_name)
-        compose_files.extend(
-            self._resolve_compose_path(path)
-            for path in component.get('COMPOSE_OVERRIDES', [])
-        )
-        compose_files.extend(
-            self._resolve_compose_path(path)
-            for path in component.get('INTERNAL_COMPOSE_OVERRIDES', [])
-        )
-
-        return compose_files
 
     def _generate_cdasim_network_override(
         self,
@@ -542,9 +268,9 @@ class ScenarioGenerator:
 
         configured_source = cloud.get("WEB_XML_FILE")
         if configured_source:
-            source = Path(self._resolve_compose_path(configured_source))
+            source = Path(self.compose.resolve_path(configured_source))
         elif cloud.get("COMPOSE_FILE"):
-            compose_path = Path(self._resolve_compose_path(cloud["COMPOSE_FILE"]))
+            compose_path = Path(self.compose.resolve_path(cloud["COMPOSE_FILE"]))
             source = compose_path.parent / "carma-cloud-config" / "web.xml"
         else:
             # A config-image deployment may already provide its own DNS-ready
@@ -594,36 +320,47 @@ class ScenarioGenerator:
         )
         return str(override_path)
 
-    def _generate_messenger_v2x_override(
+    def _generate_vehicle_v2x_override(
         self, vehicle: Dict[str, Any], index: int
     ) -> str:
-        """Generate instance-specific V2X parameters for one Messenger."""
+        """Generate instance-specific V2X parameters for one vehicle."""
 
+        component = vehicle.get("COMPONENT", "platform")
         settings = vehicle["settings"]
-        params_path = self.tmp_dir / f"messenger-v2x-{index}-params.yaml"
+        if component == "messenger":
+            service = "messenger-v2x-ros-driver"
+            address = settings["CDASIM_MESSENGER_HOST"]
+            radio_port, listening_port = 3601, 3501
+        else:
+            service = "v2x-ros-driver"
+            address = settings["CDASIM_VEHICLE_HOST"]
+            radio_port, listening_port = 1516, 2500
+
+        prefix = f"{component}-v2x-{index}"
+        params_path = self.tmp_dir / f"{prefix}-params.yaml"
         params_path.write_text(
             yaml.safe_dump(
                 {
-                    "v2x_radio_address": settings["CDASIM_MESSENGER_HOST"],
-                    "v2x_radio_listening_port": 3601,
-                    "listening_port": 3501,
+                    "v2x_radio_address": address,
+                    "v2x_radio_listening_port": radio_port,
+                    "listening_port": listening_port,
                 },
                 sort_keys=False,
             ),
             encoding="utf-8",
         )
 
-        override_path = self.tmp_dir / f"messenger-v2x-{index}-override.yml"
+        override_path = self.tmp_dir / f"{prefix}-override.yml"
         override_path.write_text(
             yaml.safe_dump(
                 {
                     "services": {
-                        "messenger-v2x-ros-driver": {
+                        service: {
                             "volumes": [
                                 {
                                     "type": "bind",
                                     "source": str(params_path),
-                                    "target": self.MESSENGER_V2X_PARAMS_TARGET,
+                                    "target": self.V2X_PARAMS_TARGET,
                                     "read_only": True,
                                 }
                             ]
@@ -636,254 +373,82 @@ class ScenarioGenerator:
         )
         return str(override_path)
 
-    def _generate_platform_v2x_override(
-        self, vehicle: Dict[str, Any], index: int
-    ) -> str:
-        """Generate instance-specific V2X parameters for one Platform."""
-
-        settings = vehicle["settings"]
-        params_path = self.tmp_dir / f"platform-v2x-{index}-params.yaml"
-        params_path.write_text(
-            yaml.safe_dump(
-                {
-                    "v2x_radio_address": settings["CDASIM_VEHICLE_HOST"],
-                    "v2x_radio_listening_port": 1516,
-                    "listening_port": 2500,
-                },
-                sort_keys=False,
-            ),
-            encoding="utf-8",
-        )
-
-        override_path = self.tmp_dir / f"platform-v2x-{index}-override.yml"
-        override_path.write_text(
-            yaml.safe_dump(
-                {
-                    "services": {
-                        "v2x-ros-driver": {
-                            "volumes": [
-                                {
-                                    "type": "bind",
-                                    "source": str(params_path),
-                                    "target": self.PLATFORM_V2X_PARAMS_TARGET,
-                                    "read_only": True,
-                                }
-                            ]
-                        }
-                    }
-                },
-                sort_keys=False,
-            ),
-            encoding="utf-8",
-        )
-        return str(override_path)
-
-    def _prepare_sensor_resources(self) -> None:
-        """Apply each Street spawn position to its staged sensor JSON."""
-
-        resources = self.config.get("scenario_resources", {}).get(
-            "infrastructure_configs", []
-        )
-        streets = {
-            street["PROJECT_NAME"]: street
-            for street in self.config["env_settings"].get("streets", [])
+    def _scenario_entry(
+        self,
+        component: dict,
+        compose_files: list[str],
+        env_filename: str,
+        project_directory: Path,
+    ) -> dict:
+        return {
+            "PROJECT_NAME": component["PROJECT_NAME"],
+            "compose_files": compose_files,
+            "env_file": str(self.tmp_dir / env_filename),
+            "project_directory": project_directory,
         }
-        for resource in resources:
-            if resource["name"] != "sensor":
-                continue
 
-            source = Path(resource["source"])
-            with source.open("r", encoding="utf-8") as sensor_file:
-                sensors = json.load(sensor_file)
-
-            if not isinstance(sensors, list) or len(sensors) != 1:
-                raise ValueError(
-                    f"Expected exactly one sensor in {source}"
-                )
-
-            sensor = sensors[0]
-            sensor["sensorId"] = resource["sensor_id"]
-            sensor["type"] = resource["sensor_type"]
-            location = sensor.get("ref", {}).get("location")
-            if not isinstance(location, dict):
-                raise ValueError(
-                    f"Sensor {resource['sensor_id']!r} in {source} must define "
-                    "ref.location"
-                )
-            location.pop("_comment", None)
-            location.update(resource["spawn_position"])
-
-            generated_dir = (
-                self.tmp_dir
-                / f"generated-sensor-json-{resource['infrastructure']}"
-            )
-            generated_dir.mkdir(parents=True, exist_ok=True)
-            generated_source = generated_dir / "sensors.json"
-            generated_source.write_text(
-                json.dumps(sensors, indent=2) + "\n",
-                encoding="utf-8",
-            )
-            resource["source"] = str(generated_source)
-            streets[resource["infrastructure"]]["settings"][
-                "SENSOR_JSON_RESOURCE_PATH"
-            ] = str(Path(resource["target"]).resolve())
-
-    # --------------------------------------------------------------------- #
-    # 4. Build scenario data ONCE
-    # --------------------------------------------------------------------- #
     def _prepare_scenario_data(self) -> Dict:
         es = self.config['env_settings']
         scenario = []
 
         # CDASim
         cd = es['cdasim']
-        compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
+        compose_files = self.compose.compose_files(cd, cd['PROJECT_NAME'])
         private_network_override = self._generate_cdasim_network_override(
             es.get('vehicles', []),
             es.get('streets', []),
         )
         if private_network_override:
             compose_files.append(private_network_override)
-        env_file = str(self.tmp_dir / '.env.cdasim')
-        # 
-        scenario.append({
-            'PROJECT_NAME': cd['PROJECT_NAME'],
-            'compose_file': compose_files[0],
-            'compose_files': compose_files,
-            'env_file': env_file,
-            'platform_net': None,
-            'street_net': None,
-            'project_directory': self.tmp_dir
-        })
+        scenario.append(
+            self._scenario_entry(cd, compose_files, ".env.cdasim", self.tmp_dir)
+        )
 
         # CARMA Cloud
         cloud = es.get('carma_cloud')
         if cloud:
-            compose_files = self._compose_files(
+            compose_files = self.compose.compose_files(
                 cloud, cloud['PROJECT_NAME']
             )
             cloud_web_override = self._generate_cloud_web_xml_override(cloud)
             if cloud_web_override:
                 compose_files.append(cloud_web_override)
-            env_file = str(self.tmp_dir / '.env.carma_cloud')
-            scenario.append({
-                'PROJECT_NAME': cloud['PROJECT_NAME'],
-                'compose_file': compose_files[0],
-                'compose_files': compose_files,
-                'env_file': env_file,
-                'platform_net': None,
-                'street_net': None,
-                'project_directory': self.tmp_dir
-            })
+            scenario.append(
+                self._scenario_entry(
+                    cloud, compose_files, ".env.carma_cloud", self.tmp_dir
+                )
+            )
 
         # Vehicles
         for i, v in enumerate(es.get('vehicles', []), 1):
-            compose_files = self._compose_files(v, v['PROJECT_NAME'])
-            if v.get('COMPONENT', 'platform') == 'messenger':
-                compose_files.append(
-                    self._generate_messenger_v2x_override(v, i)
+            compose_files = self.compose.compose_files(v, v['PROJECT_NAME'])
+            compose_files.append(self._generate_vehicle_v2x_override(v, i))
+            scenario.append(
+                self._scenario_entry(
+                    v,
+                    compose_files,
+                    f".env.vehicle_{i}",
+                    self.tmp_dir / f"config-{v['PROJECT_NAME']}",
                 )
-            else:
-                compose_files.append(
-                    self._generate_platform_v2x_override(v, i)
-                )
-            env_file = str(self.tmp_dir / f'.env.vehicle_{i}')
-            scenario.append({
-                'PROJECT_NAME': v['PROJECT_NAME'],
-                'compose_file': compose_files[0],
-                'compose_files': compose_files,
-                'env_file': env_file,
-                'platform_net': f"{v['PROJECT_NAME']}_platform_net",
-                'street_net': None,
-                'project_directory': f"{self.tmp_dir}/config-{v['PROJECT_NAME']}"
-            })
+            )
 
         # Streets
         for i, s in enumerate(es.get('streets', []), 1):
-            compose_files = self._compose_files(s, s['PROJECT_NAME'])
+            compose_files = self.compose.compose_files(s, s['PROJECT_NAME'])
             compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
-            if "SENSOR_JSON_RESOURCE_PATH" in s["settings"]:
-                compose_files.append(str(STREET_SENSOR_OVERRIDE_PATH))
-            env_file = str(self.tmp_dir / f'.env.street_{i}')
-            scenario.append({
-                'PROJECT_NAME': s['PROJECT_NAME'],
-                'compose_file': compose_files[0],
-                'compose_files': compose_files,
-                'env_file': env_file,
-                'platform_net': None,
-                'street_net': s['settings']['STREET_NETWORK_NAME'],
-                'project_directory': f"{self.tmp_dir}/"
-            })
+            scenario.append(
+                self._scenario_entry(
+                    s, compose_files, f".env.street_{i}", self.tmp_dir
+                )
+            )
 
         return {
             'scenario': scenario,
             'networks': es.get('runner_networks', []),
-            'config_containers': list(self._config_containers.values()),
+            'config_containers': list(self.compose.config_containers.values()),
             'scenario_resources': self.config.get('scenario_resources', {}),
             'temp_dir': str(self.tmp_dir)
         }
-
-    def _stage_config_overrides(
-        self, component: Dict[str, Any], project_name: str
-    ) -> None:
-        """Overlay repository files onto an extracted config image."""
-
-        overrides = component.get('CONFIG_OVERRIDES', {})
-        if not overrides:
-            return
-        if not isinstance(overrides, dict):
-            raise ValueError(f"CONFIG_OVERRIDES for {project_name} must be a mapping")
-
-        compose_path = component.get('CONFIG_COMPOSE_PATH')
-        config_container = self._config_containers.get(project_name)
-        if not compose_path or not config_container:
-            raise ValueError(
-                f"CONFIG_OVERRIDES for {project_name} requires a config image "
-                "and CONFIG_COMPOSE_PATH"
-            )
-
-        source_root = CONFIG_DIRECTORY.resolve()
-        local_root = (self.tmp_dir / f"config-{project_name}").resolve()
-        container_root = Path(compose_path).parent
-        for target_name, source_name in overrides.items():
-            if not all(
-                isinstance(value, str) and value
-                for value in (target_name, source_name)
-            ):
-                raise ValueError(
-                    f"Invalid CONFIG_OVERRIDES entry for {project_name}"
-                )
-
-            source_path = Path(source_name)
-            source_directory = (
-                DEFAULT_CONFIG_OVERRIDE_DIRECTORY
-                if len(source_path.parts) == 1
-                else source_root
-            )
-            source = (source_directory / source_path).resolve()
-            target = (local_root / target_name).resolve()
-            try:
-                source.relative_to(source_root)
-                relative_target = target.relative_to(local_root)
-            except ValueError as exc:
-                raise ValueError(
-                    f"CONFIG_OVERRIDES paths for {project_name} must stay "
-                    "inside their config directories"
-                ) from exc
-            if not source.is_file() or not target.is_file():
-                raise FileNotFoundError(
-                    f"Invalid CONFIG_OVERRIDES file for {project_name}: "
-                    f"{source} → {target}"
-                )
-
-            shutil.copy2(source, target)
-            config_container['overrides'].append(
-                {
-                    'source': str(target),
-                    'target': str(container_root / relative_target),
-                }
-            )
-            print(f"Staged {source} → {target} for {project_name}")
 
     # --------------------------------------------------------------------- #
     # 5. Generate sim_start.sh
@@ -922,7 +487,9 @@ class ScenarioGenerator:
 
         es = self.config['env_settings']
 
-        self._prepare_sensor_resources()
+        self.resource_manager.prepare_infrastructure(
+            self.config.get("scenario_resources", {}), es
+        )
 
         cdasim_settings = es['cdasim'].get('settings', {})
         if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
@@ -930,7 +497,10 @@ class ScenarioGenerator:
 
         # Generate .env files
         self.generate_env_file(
-            '.env.cdasim', self._cdasim_env_settings(es['cdasim'])
+            '.env.cdasim',
+            self.resource_manager.cdasim_env_settings(
+                es['cdasim'], self.config.get("scenario_resources", {})
+            ),
         )
         if es.get('carma_cloud'):
             self.generate_env_file('.env.carma_cloud', es['carma_cloud'])

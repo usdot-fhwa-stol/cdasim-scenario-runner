@@ -167,26 +167,6 @@ stage_resource_file  \
 #  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
 prepare_docker_socket
 
-# Validate the host Docker socket and export its group ID for Compose services
-# that access the host Docker daemon to launch CARLA or NS-3 containers.
-# Usage: prepare_docker_socket
-prepare_docker_socket() {
-    local socket_path="/var/run/docker.sock"
-
-    if [ ! -S "$socket_path" ]; then
-        echo "Error: $socket_path is not a Docker socket." >&2
-        exit 1
-    fi
-    if ! DOCKER_SOCKET_GID=$(stat -c '%g' "$socket_path"); then
-        echo "Error: Could not determine the group ID of $socket_path." >&2
-        exit 1
-    fi
-    export DOCKER_SOCKET_GID
-}
-
-#  Necessary for docker-in-docker scenarios to allow the container to access the host's Docker daemon for CARLA/NS3 containers
-prepare_docker_socket
-
 echo "Pulling scenario runtime images..."
 {% for c in scenario %}
 docker compose \
