@@ -597,9 +597,7 @@ class ScenarioGenerator:
         if service_networks:
             services["cdasim"] = {"networks": service_networks}
 
-        # The EVC service only exists when its Compose profile is active, so
-        # its network aliases are configured only for an enabled EVC.
-        if streets and evc_enabled:
+        if streets:
             services["econolite-virtual-controller"] = {
                 "networks": {
                     "streets_shared": {"aliases": ["evc"]}
@@ -786,13 +784,9 @@ class ScenarioGenerator:
         # CDASim
         cd = es['cdasim']
         compose_files = self._compose_files(cd, cd['PROJECT_NAME'])
-        evc_enabled = bool(
-            (cd.get('settings', {}).get('EVC') or {}).get('enable', False)
-        )
         private_network_override = self._generate_cdasim_network_override(
             es.get('vehicles', []),
             es.get('streets', []),
-            evc_enabled,
         )
         if private_network_override:
             compose_files.append(private_network_override)

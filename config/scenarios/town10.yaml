@@ -16,8 +16,6 @@ test_cases:
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
-          EVC:
-            enable: false
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
