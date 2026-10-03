@@ -56,6 +56,8 @@ class ScenarioGenerator:
     CONFIG_INIT_COMMAND = (
         "cp -a /root/vehicle/config/. /opt/carma/vehicle/config/"
     )
+    CONFIG_CALIBRATION_SOURCE = "/root/vehicle/config/calibration"
+    CALIBRATION_TARGET = "/opt/carma/vehicle/calibration"
     MESSENGER_V2X_PARAMS_TARGET = (
         "/opt/carma/install/v2x_ros_driver/share/"
         "v2x_ros_driver/config/params.yaml"
@@ -88,6 +90,7 @@ class ScenarioGenerator:
         ).resolve()
         self.data: Dict[str, Any] = {}  # will hold scenario + temp_dir
         self._config_containers: Dict[str, Dict[str, Any]] = {}
+        self._config_calibrations: Dict[str, Path] = {}
 
     # --------------------------------------------------------------------- #
     # 1. Load config + create ./tmp/
@@ -154,6 +157,7 @@ class ScenarioGenerator:
             **cdasim,
             "settings": dict(cdasim.get("settings", {})),
         }
+
         cdasim_resources = self.config.get("scenario_resources", {}).get(
             "cdasim_configs", []
         )
@@ -324,9 +328,10 @@ class ScenarioGenerator:
         full_image: str,
         project_name: str,
         compose_path: Optional[str] = None,
-        pull_policy: str = 'missing'
+        pull_policy: str = 'missing',
+        calibration_path: Optional[str] = None
     ) -> str:
-        
+
         if not full_image:
             raise ValueError(f"Missing CONFIG_IMAGE_FULL for {project_name}")
 
@@ -398,6 +403,9 @@ class ScenarioGenerator:
                 )
 
             self.normalize_compose_services(dest)
+            self._stage_config_calibration(
+                cname, project_name, calibration_path
+            )
 
             config_container = {
                 'name': f'{project_name}-config',
@@ -411,6 +419,86 @@ class ScenarioGenerator:
 
         finally:
             subprocess.run(["docker", "rm", "-fv", cname], capture_output=True)
+
+    def _stage_config_calibration(
+        self,
+        container_name: str,
+        project_name: str,
+        calibration_path: Optional[str]
+    ) -> None:
+        """Copy vehicle calibration data out of carma-config image into a tmp dir.
+
+        Args:
+        container_name: Container created from the config image.
+        project_name: config version the calibration data belongs to.
+        calibration_path: Directory inside the image holding the
+        calibration dir, or ``None`` to use ``CONFIG_CALIBRATION_SOURCE``.
+
+        A config image that includes no calibration directory will not result in an error;
+        the component will instead keep whatever its compose file already mounts.
+        """
+
+        source = calibration_path or self.CONFIG_CALIBRATION_SOURCE
+        dest = self.tmp_dir / f"calibration-{project_name}"
+        shutil.rmtree(dest, ignore_errors=True)
+        dest.mkdir(parents=True)
+        result = subprocess.run(
+            ["docker", "cp", f"{container_name}:{source}/.", str(dest)],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            shutil.rmtree(dest, ignore_errors=True)
+            print(
+                f"No calibration data at {source} in the {project_name} "
+                f"config image; leaving its compose volumes unchanged."
+            )
+            return
+
+        self._config_calibrations[project_name] = dest
+        print(f"Extracted {source} → {dest}")
+
+    def _generate_calibration_override(
+        self, project_name: str, base_compose: str
+    ) -> Optional[str]:
+        """Remap calibration volumes onto the staged copy from the config image.
+        """
+
+        staged = self._config_calibrations.get(project_name)
+        if not staged:
+            return None
+
+        with open(base_compose, 'r') as f:
+            compose = yaml.safe_load(f) or {}
+
+        services = {}
+        for name, service in (compose.get('services') or {}).items():
+            for volume in (service or {}).get('volumes') or []:
+                if isinstance(volume, dict):
+                    target = volume.get('target')
+                else:
+                    parts = str(volume).split(':')
+                    target = parts[1] if len(parts) > 1 else None
+                if target == self.CALIBRATION_TARGET:
+                    services[name] = {
+                        'volumes': [f"{staged}:{self.CALIBRATION_TARGET}"]
+                    }
+                    break
+
+        if not services:
+            print(
+                f"No service in the {project_name} Compose file mounts "
+                f"{self.CALIBRATION_TARGET}; staged calibration data unused."
+            )
+            return None
+
+        override_path = self.tmp_dir / f"{project_name}-calibration.yml"
+        override_path.write_text(
+            yaml.safe_dump({'services': services}, sort_keys=False),
+            encoding="utf-8",
+        )
+        print(f"Generated {override_path}")
+        return str(override_path)
 
     def _resolve_compose_path(self, configured_path: str) -> str:
         path = Path(configured_path)
@@ -443,12 +531,19 @@ class ScenarioGenerator:
             component.get('CONFIG_IMAGE_FULL'),
             project_name,
             component.get('CONFIG_COMPOSE_PATH'),
-            component.get('CONFIG_IMAGE_PULL_POLICY', 'missing')
+            component.get('CONFIG_IMAGE_PULL_POLICY', 'missing'),
+            component.get('CONFIG_CALIBRATION_PATH')
         )
 
     def _compose_files(self, component: Dict, project_name: str) -> List[str]:
-        compose_files = [self._base_compose(component, project_name)]
+        base_compose = self._base_compose(component, project_name)
+        compose_files = [base_compose]
         self._stage_config_overrides(component, project_name)
+        calibration_override = self._generate_calibration_override(
+            project_name, base_compose
+        )
+        if calibration_override:
+            compose_files.append(calibration_override)
         compose_files.extend(
             self._resolve_compose_path(path)
             for path in component.get('COMPOSE_OVERRIDES', [])
@@ -465,7 +560,7 @@ class ScenarioGenerator:
         vehicles: List[Dict[str, Any]],
         streets: List[Dict[str, Any]],
     ) -> Optional[str]:
-        """Attach CDASim to vehicle networks and the shared street network."""
+        """Configure CDASim networks and the optional EVC service."""
 
         service_networks = {}
         networks = {}
@@ -486,14 +581,6 @@ class ScenarioGenerator:
             service_networks[network_key] = {
                 "aliases": ["cdasim"],
             }
-            evc_aliases = [
-                street["settings"]["EVC_SIM_HOST"]
-                for street in streets
-                if "EVC_SIM_HOST" in street["settings"]
-            ]
-            evc_network = {}
-            if evc_aliases:
-                evc_network["aliases"] = evc_aliases
             networks[network_key] = {
                 "external": True,
                 "name": street_network_name,
@@ -501,11 +588,15 @@ class ScenarioGenerator:
 
         if not networks:
             return None
+        services = {}
+        if service_networks:
+            services["cdasim"] = {"networks": service_networks}
 
-        services = {"cdasim": {"networks": service_networks}}
         if streets:
             services["econolite-virtual-controller"] = {
-                "networks": {"streets_shared": evc_network}
+                "networks": {
+                    "streets_shared": {"aliases": ["evc"]}
+                }
             }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"

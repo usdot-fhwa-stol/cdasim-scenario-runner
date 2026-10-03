@@ -126,22 +126,12 @@
         "zookeeper": {
           "env": "STREET_INFRASTRUCTURE_HOST",
           "host": "zookeeper"
-        },
-        "econolite-virtual-controller": {
-          "env": "EVC_PRIVATE_HOST",
-          "host": "econolite-virtual-controller",
-          "conditional": "evc_enabled"
         }
       },
       "simulation_endpoints": {
         "v2xhub": {
           "env": "V2XHUB_SIM_HOST",
           "alias_template": "v2xhub-{index}-sim"
-        },
-        "econolite-virtual-controller": {
-          "env": "EVC_SIM_HOST",
-          "alias_template": "evc-{index}-sim",
-          "conditional": "evc_enabled"
         }
       }
     }

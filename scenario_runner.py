@@ -530,8 +530,8 @@ class ScenarioRunner:
 
         print("Preparing host directories...")
         self._prepare_host_directories(case)
-        protected_directories = self._host_directories(case)
 
+        protected_directories = self._host_directories(case)
         print("Clearing source log directories...")
         self.collector.clear_sources(case, protected_directories)
 
