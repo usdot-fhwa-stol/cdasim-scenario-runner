@@ -37,6 +37,12 @@ STREET_NETWORK_OVERRIDE_PATH = (
     / "compose"
     / "street-network.override.yml"
 )
+STREET_SENSOR_OVERRIDE_PATH = (
+    Path(__file__).resolve().parent
+    / "config"
+    / "compose"
+    / "street-sensor-json.override.yml"
+)
 CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
 DEFAULT_CONFIG_OVERRIDE_DIRECTORY = CONFIG_DIRECTORY / "vehiclecfg"
 
@@ -485,7 +491,7 @@ class ScenarioGenerator:
                 f"{self.CALIBRATION_TARGET}; staged calibration data unused."
             )
             return None
-            
+
         override_path = self.tmp_dir / f"{project_name}-calibration.yml"
         override_path.write_text(
             yaml.safe_dump({'services': services}, sort_keys=False),
@@ -579,7 +585,7 @@ class ScenarioGenerator:
                 "external": True,
                 "name": street_network_name,
             }
-        
+
         if not networks:
             return None
         services = {}
@@ -763,6 +769,56 @@ class ScenarioGenerator:
         )
         return str(override_path)
 
+    def _prepare_sensor_resources(self) -> None:
+        """Apply each Street spawn position to its staged sensor JSON."""
+
+        resources = self.config.get("scenario_resources", {}).get(
+            "infrastructure_configs", []
+        )
+        streets = {
+            street["PROJECT_NAME"]: street
+            for street in self.config["env_settings"].get("streets", [])
+        }
+        for resource in resources:
+            if resource["name"] != "sensor":
+                continue
+
+            source = Path(resource["source"])
+            with source.open("r", encoding="utf-8") as sensor_file:
+                sensors = json.load(sensor_file)
+
+            if not isinstance(sensors, list) or len(sensors) != 1:
+                raise ValueError(
+                    f"Expected exactly one sensor in {source}"
+                )
+
+            sensor = sensors[0]
+            sensor["sensorId"] = resource["sensor_id"]
+            sensor["type"] = resource["sensor_type"]
+            location = sensor.get("ref", {}).get("location")
+            if not isinstance(location, dict):
+                raise ValueError(
+                    f"Sensor {resource['sensor_id']!r} in {source} must define "
+                    "ref.location"
+                )
+            location.pop("_comment", None)
+            location.update(resource["spawn_position"])
+
+            generated_dir = (
+                self.tmp_dir
+                / f"generated-sensor-json-{resource['infrastructure']}"
+            )
+            generated_dir.mkdir(parents=True, exist_ok=True)
+            generated_source = generated_dir / "sensors.json"
+            generated_source.write_text(
+                json.dumps(sensors, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            resource["source"] = str(generated_source)
+            streets[resource["infrastructure"]]["settings"][
+                "SENSOR_JSON_RESOURCE_PATH"
+            ] = str(Path(resource["target"]).resolve())
+
     # --------------------------------------------------------------------- #
     # 4. Build scenario data ONCE
     # --------------------------------------------------------------------- #
@@ -837,6 +893,8 @@ class ScenarioGenerator:
         for i, s in enumerate(es.get('streets', []), 1):
             compose_files = self._compose_files(s, s['PROJECT_NAME'])
             compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
+            if "SENSOR_JSON_RESOURCE_PATH" in s["settings"]:
+                compose_files.append(str(STREET_SENSOR_OVERRIDE_PATH))
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],
@@ -954,6 +1012,8 @@ class ScenarioGenerator:
             self.load_config()
 
         es = self.config['env_settings']
+
+        self._prepare_sensor_resources()
 
         cdasim_settings = es['cdasim'].get('settings', {})
         if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
