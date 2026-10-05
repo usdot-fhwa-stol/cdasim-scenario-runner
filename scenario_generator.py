@@ -37,12 +37,6 @@ STREET_NETWORK_OVERRIDE_PATH = (
     / "compose"
     / "street-network.override.yml"
 )
-STREET_SENSOR_OVERRIDE_PATH = (
-    Path(__file__).resolve().parent
-    / "config"
-    / "compose"
-    / "street-sensor-json.override.yml"
-)
 CONFIG_DIRECTORY = Path(__file__).resolve().parent / "config"
 DEFAULT_CONFIG_OVERRIDE_DIRECTORY = CONFIG_DIRECTORY / "vehiclecfg"
 
@@ -809,15 +803,18 @@ class ScenarioGenerator:
                 / f"generated-sensor-json-{resource['infrastructure']}"
             )
             generated_dir.mkdir(parents=True, exist_ok=True)
-            generated_source = generated_dir / "sensors.json"
+            generated_source = (
+                generated_dir
+                / f"sensors-{resource['infrastructure']}.json"
+            )
             generated_source.write_text(
                 json.dumps(sensors, indent=2) + "\n",
                 encoding="utf-8",
             )
             resource["source"] = str(generated_source)
             streets[resource["infrastructure"]]["settings"][
-                "SENSOR_JSON_RESOURCE_PATH"
-            ] = str(Path(resource["target"]).resolve())
+                "SENSOR_JSON_FILE_PATH"
+            ] = f"/var/www/download/{generated_source.name}"
 
     # --------------------------------------------------------------------- #
     # 4. Build scenario data ONCE
@@ -893,8 +890,6 @@ class ScenarioGenerator:
         for i, s in enumerate(es.get('streets', []), 1):
             compose_files = self._compose_files(s, s['PROJECT_NAME'])
             compose_files.append(str(STREET_NETWORK_OVERRIDE_PATH))
-            if "SENSOR_JSON_RESOURCE_PATH" in s["settings"]:
-                compose_files.append(str(STREET_SENSOR_OVERRIDE_PATH))
             env_file = str(self.tmp_dir / f'.env.street_{i}')
             scenario.append({
                 'PROJECT_NAME': s['PROJECT_NAME'],

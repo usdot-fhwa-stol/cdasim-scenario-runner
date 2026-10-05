@@ -279,6 +279,8 @@ class ScenarioRunner:
                                 )
                 target_folder_name = resource_name + "_" + infra_name
                 target = self.tmp_dir / target_folder_name
+                if resource_name == "sensor":
+                    target = V2XHUB_DOWNLOAD_DIRECTORY
                 resource = {
                     "source": str(source),
                     "target": str(target),
