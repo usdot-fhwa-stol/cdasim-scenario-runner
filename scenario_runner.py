@@ -279,14 +279,34 @@ class ScenarioRunner:
                                 )
                 target_folder_name = resource_name + "_" + infra_name
                 target = self.tmp_dir / target_folder_name
-                infrastructure_configs.append(
-                    {
-                        "source": str(source),
-                        "target": str(target),
-                        "name": str(resource_name),
-                        "infrastructure": str(infra_name)
-                    }
-                )
+                if resource_name == "sensor":
+                    target = V2XHUB_DOWNLOAD_DIRECTORY
+                resource = {
+                    "source": str(source),
+                    "target": str(target),
+                    "name": str(resource_name),
+                    "infrastructure": str(infra_name)
+                }
+                if resource_name == "sensor":
+                    sensor_settings = settings.get("SENSORS") or {}
+                    sensor_id = sensor_settings.get("sensor_id")
+                    sensor_type = sensor_settings.get("type")
+                    if not sensor_id or not sensor_type:
+                        raise ValueError(
+                            "SENSORS.sensor_id and SENSORS.type are required "
+                            f"for {infra_name}"
+                        )
+                    resource["sensor_id"] = str(sensor_id)
+                    resource["sensor_type"] = str(sensor_type)
+                    sensor_location = sensor_settings.get("location")
+                    if sensor_location is not None:
+                        if "x" not in sensor_location or "y" not in sensor_location:
+                            raise ValueError(
+                                f"SENSORS.location.x and SENSORS.location.y are "
+                                f"required for {infra_name}"
+                            )
+                        resource["sensor_location"] = dict(sensor_location)
+                infrastructure_configs.append(resource)
 
         return {
             "map_file": {

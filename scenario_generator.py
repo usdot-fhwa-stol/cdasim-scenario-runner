@@ -485,7 +485,7 @@ class ScenarioGenerator:
                 f"{self.CALIBRATION_TARGET}; staged calibration data unused."
             )
             return None
-            
+
         override_path = self.tmp_dir / f"{project_name}-calibration.yml"
         override_path.write_text(
             yaml.safe_dump({'services': services}, sort_keys=False),
@@ -579,7 +579,7 @@ class ScenarioGenerator:
                 "external": True,
                 "name": street_network_name,
             }
-        
+
         if not networks:
             return None
         services = {}
@@ -762,6 +762,60 @@ class ScenarioGenerator:
             encoding="utf-8",
         )
         return str(override_path)
+
+    def _prepare_sensor_resources(self) -> None:
+        """Apply each Street sensor configuration to its staged sensor JSON."""
+
+        resources = self.config.get("scenario_resources", {}).get(
+            "infrastructure_configs", []
+        )
+        streets = {
+            street["PROJECT_NAME"]: street
+            for street in self.config["env_settings"].get("streets", [])
+        }
+        for resource in resources:
+            if resource["name"] != "sensor":
+                continue
+
+            source = Path(resource["source"])
+            with source.open("r", encoding="utf-8") as sensor_file:
+                sensors = json.load(sensor_file)
+
+            if not isinstance(sensors, list) or len(sensors) != 1:
+                raise ValueError(
+                    f"Expected exactly one sensor in {source}"
+                )
+
+            sensor = sensors[0]
+            sensor["sensorId"] = resource["sensor_id"]
+            sensor["type"] = resource["sensor_type"]
+            location = sensor.get("ref", {}).get("location")
+            if not isinstance(location, dict):
+                raise ValueError(
+                    f"Sensor {resource['sensor_id']!r} in {source} must define "
+                    "ref.location"
+                )
+            location.pop("_comment", None)
+            if "sensor_location" in resource:
+                location.update(resource["sensor_location"])
+
+            generated_dir = (
+                self.tmp_dir
+                / f"generated-sensor-json-{resource['infrastructure']}"
+            )
+            generated_dir.mkdir(parents=True, exist_ok=True)
+            generated_source = (
+                generated_dir
+                / f"sensors-{resource['infrastructure']}.json"
+            )
+            generated_source.write_text(
+                json.dumps(sensors, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            resource["source"] = str(generated_source)
+            streets[resource["infrastructure"]]["settings"][
+                "SENSOR_JSON_FILE_PATH"
+            ] = f"/var/www/download/{generated_source.name}"
 
     # --------------------------------------------------------------------- #
     # 4. Build scenario data ONCE
@@ -954,6 +1008,8 @@ class ScenarioGenerator:
             self.load_config()
 
         es = self.config['env_settings']
+
+        self._prepare_sensor_resources()
 
         cdasim_settings = es['cdasim'].get('settings', {})
         if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
