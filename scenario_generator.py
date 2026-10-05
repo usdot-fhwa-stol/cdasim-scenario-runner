@@ -764,7 +764,7 @@ class ScenarioGenerator:
         return str(override_path)
 
     def _prepare_sensor_resources(self) -> None:
-        """Apply each Street spawn position to its staged sensor JSON."""
+        """Apply each Street sensor configuration to its staged sensor JSON."""
 
         resources = self.config.get("scenario_resources", {}).get(
             "infrastructure_configs", []
@@ -796,7 +796,8 @@ class ScenarioGenerator:
                     "ref.location"
                 )
             location.pop("_comment", None)
-            location.update(resource["spawn_position"])
+            if "sensor_location" in resource:
+                location.update(resource["sensor_location"])
 
             generated_dir = (
                 self.tmp_dir

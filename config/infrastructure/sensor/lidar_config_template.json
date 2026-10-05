@@ -5,7 +5,6 @@
     "ref": {
       "type": "CARTESIAN",
       "location": {
-        "_comment": "x and y use SUMO coordinates; z is the default sensor height.",
         "x": 0.0,
         "y": 0.0,
         "z": 10.0

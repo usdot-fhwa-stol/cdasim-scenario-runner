@@ -288,12 +288,6 @@ class ScenarioRunner:
                     "infrastructure": str(infra_name)
                 }
                 if resource_name == "sensor":
-                    spawn_position = settings.get("SPAWN_POSITION", {})
-                    if "x" not in spawn_position or "y" not in spawn_position:
-                        raise ValueError(
-                            f"SPAWN_POSITION.x and SPAWN_POSITION.y are required "
-                            f"for sensor configuration on {infra_name}"
-                        )
                     sensor_settings = settings.get("SENSORS") or {}
                     sensor_id = sensor_settings.get("sensor_id")
                     sensor_type = sensor_settings.get("type")
@@ -304,10 +298,14 @@ class ScenarioRunner:
                         )
                     resource["sensor_id"] = str(sensor_id)
                     resource["sensor_type"] = str(sensor_type)
-                    resource["spawn_position"] = {
-                        "x": spawn_position["x"],
-                        "y": spawn_position["y"],
-                    }
+                    sensor_location = sensor_settings.get("location")
+                    if sensor_location is not None:
+                        if "x" not in sensor_location or "y" not in sensor_location:
+                            raise ValueError(
+                                f"SENSORS.location.x and SENSORS.location.y are "
+                                f"required for {infra_name}"
+                            )
+                        resource["sensor_location"] = dict(sensor_location)
                 infrastructure_configs.append(resource)
 
         return {

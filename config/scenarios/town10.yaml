@@ -64,9 +64,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: 127.1
             SPAWN_POSITION:
-              x: 63.34
-              y: 8.86
+              x: -46.0
+              y: 127.1
               z: 0.0
               yaw: 180.0
 
@@ -171,9 +174,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: 127.1
             SPAWN_POSITION:
-              x: 63.34
-              y: 8.86
+              x: -46.0
+              y: 127.1
               z: 0.0
               yaw: 180.0
 
@@ -301,9 +307,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: 127.1
             SPAWN_POSITION:
-              x: 63.34
-              y: 8.86
+              x: -46.0
+              y: 127.1
               z: 0.0
               yaw: 180.0
 
@@ -431,9 +440,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: 127.1
             SPAWN_POSITION:
-              x: 63.34
-              y: 8.86
+              x: -46.0
+              y: 127.1
               z: 0.0
               yaw: 180.0
 
@@ -452,9 +464,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
+              location:
+                x: -104.0
+                y: 31.7
             SPAWN_POSITION:
-              x: 5.34
-              y: 104.26
+              x: -104.0
+              y: 31.7
               z: 0.0
               yaw: 180.0
 
@@ -582,9 +597,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: 127.1
             SPAWN_POSITION:
-              x: 63.34
-              y: 8.86
+              x: -46.0
+              y: 127.1
               z: 0.0
               yaw: 180.0
 
@@ -603,9 +621,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
+              location:
+                x: -104.0
+                y: 31.7
             SPAWN_POSITION:
-              x: 5.34
-              y: 104.26
+              x: -104.0
+              y: 31.7
               z: 0.0
               yaw: 180.0
 
@@ -624,9 +645,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_3
               type: SemanticLidar
+              location:
+                x: -49.9
+                y: 17.3
             SPAWN_POSITION:
-              x: 59.44
-              y: 118.66
+              x: -49.9
+              y: 17.3
               z: 0.0
               yaw: 180.0
 
