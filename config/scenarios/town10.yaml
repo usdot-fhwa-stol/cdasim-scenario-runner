@@ -13,7 +13,6 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
-          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -98,7 +97,6 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
-          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -210,7 +208,6 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
-          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -346,7 +343,6 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
-          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -506,7 +502,6 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
-          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
