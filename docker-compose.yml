@@ -1,6 +1,6 @@
 services:
   cdasim:
-    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/cdasim:${CDASIM_VERSION:-develop}"
+    image: "${CDASIM_IMAGE:-usdotfhwastoldev/cdasim:develop}"
     container_name: cdasim
     privileged: true
     networks:
@@ -28,7 +28,7 @@ services:
     command: bash -c "./mosaic.sh -s ${MOSAIC_SCENARIO:-Town10}"
 
   carla-sensor-lib:
-    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/carla-sensor-lib:${CARLA_SENSOR_LIB_VERSION:-develop}"
+    image: "${CARLA_SENSOR_LIB_IMAGE:-usdotfhwastoldev/carla-sensor-lib:develop}"
     container_name: carla-sensor-lib
     restart: always
     networks:
@@ -43,7 +43,7 @@ services:
       --xmlrpc-server-port 8091"
 
   xml-rpc-server:
-    image: "${STOL_DOCKER_ORG:-usdotfhwastoldev}/xml-rpc-server:${XML_RPC_SERVER_VERSION:-develop}"
+    image: "${XML_RPC_SERVER_IMAGE:-usdotfhwastoldev/xml-rpc-server:develop}"
     container_name: xml-rpc-server
     networks:
       - carma_sim_net

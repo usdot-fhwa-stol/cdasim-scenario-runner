@@ -1,0 +1,9 @@
+services:
+  cdasim:
+    image: "${CDASIM_IMAGE:?CDASIM_IMAGE is required}"
+
+  carla-sensor-lib:
+    image: "${CARLA_SENSOR_LIB_IMAGE:?CARLA_SENSOR_LIB_IMAGE is required}"
+
+  xml-rpc-server:
+    image: "${XML_RPC_SERVER_IMAGE:?XML_RPC_SERVER_IMAGE is required}"
