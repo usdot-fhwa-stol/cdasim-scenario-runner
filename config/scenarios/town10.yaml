@@ -13,6 +13,7 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
+          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -44,7 +45,7 @@ test_cases:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -97,6 +98,7 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
+          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -129,7 +131,7 @@ test_cases:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -153,7 +155,7 @@ test_cases:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -208,6 +210,7 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
+          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -240,7 +243,7 @@ test_cases:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -264,7 +267,7 @@ test_cases:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -288,7 +291,7 @@ test_cases:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
@@ -343,6 +346,7 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
+          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -375,7 +379,7 @@ test_cases:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -399,7 +403,7 @@ test_cases:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -423,7 +427,7 @@ test_cases:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
@@ -502,6 +506,7 @@ test_cases:
         COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
+          - ../compose/cdasim-images.override.yml
           - ../compose/cdasim-ns3-runtime.override.yml
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
@@ -534,7 +539,7 @@ test_cases:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -558,7 +563,7 @@ test_cases:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -582,7 +587,7 @@ test_cases:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
