@@ -14,8 +14,11 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
+          - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -23,7 +26,11 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           CDASIM_RESOURCES:
-            sumocfg: Town10_client_1.sumocfg
+            pyeos_db: .pyeos.db
+            evc_sumo:
+              - evc_sumo_cfg.json
+              - tl_189.cfg
+            sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
@@ -66,10 +73,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -46.0
-                y: 127.1
+                y: -127.1
             SPAWN_POSITION:
               x: -46.0
-              y: 127.1
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -176,10 +183,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -46.0
-                y: 127.1
+                y: -127.1
             SPAWN_POSITION:
               x: -46.0
-              y: 127.1
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -205,6 +212,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -309,10 +318,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -46.0
-                y: 127.1
+                y: -127.1
             SPAWN_POSITION:
               x: -46.0
-              y: 127.1
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -338,6 +347,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -442,10 +453,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -46.0
-                y: 127.1
+                y: -127.1
             SPAWN_POSITION:
               x: -46.0
-              y: 127.1
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -466,10 +477,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -104.0
-                y: 31.7
+                y: -31.7
             SPAWN_POSITION:
               x: -104.0
-              y: 31.7
+              y: -31.7
               z: 0.0
               yaw: 180.0
 
@@ -495,6 +506,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -599,10 +612,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -46.0
-                y: 127.1
+                y: -127.1
             SPAWN_POSITION:
               x: -46.0
-              y: 127.1
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -623,10 +636,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -104.0
-                y: 31.7
+                y: -31.7
             SPAWN_POSITION:
               x: -104.0
-              y: 31.7
+              y: -31.7
               z: 0.0
               yaw: 180.0
 
@@ -647,10 +660,10 @@ test_cases:
               type: SemanticLidar
               location:
                 x: -49.9
-                y: 17.3
+                y: -17.3
             SPAWN_POSITION:
               x: -49.9
-              y: 17.3
+              y: -17.3
               z: 0.0
               yaw: 180.0
 
