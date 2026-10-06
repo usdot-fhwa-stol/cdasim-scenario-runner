@@ -52,9 +52,7 @@ test_cases:
               x: 50.6
               y: 133.5
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
+  
       streets:
         - PROJECT_NAME: street_1
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
@@ -78,8 +76,6 @@ test_cases:
               x: -46.0
               y: -127.1
               z: 0.0
-              yaw: 180.0
-
     data_output:
       output_directory: /opt/carma-simulation/tests/output
       collect:
@@ -137,10 +133,6 @@ test_cases:
               x: 50.6
               y: 133.5
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
-
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
           CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
@@ -161,9 +153,6 @@ test_cases:
               x: 72.3
               y: 12.9
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
       streets:
         - PROJECT_NAME: street_1
@@ -188,7 +177,6 @@ test_cases:
               x: -46.0
               y: -127.1
               z: 0.0
-              yaw: 180.0
 
     data_output:
       output_directory: /opt/carma-simulation/tests/output
@@ -248,10 +236,6 @@ test_cases:
               x: 50.6
               y: 133.5
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
-
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
           CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
@@ -272,9 +256,6 @@ test_cases:
               x: 72.3
               y: 12.9
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
@@ -296,9 +277,6 @@ test_cases:
               x: -48.3
               y: -38.2
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 90.0
 
       streets:
         - PROJECT_NAME: street_1
@@ -323,7 +301,6 @@ test_cases:
               x: -46.0
               y: -127.1
               z: 0.0
-              yaw: 180.0
 
     data_output:
       output_directory: /opt/carma-simulation/tests/output/
@@ -383,9 +360,6 @@ test_cases:
               x: 50.6
               y: 133.5
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
@@ -407,9 +381,6 @@ test_cases:
               x: 72.3
               y: 12.9
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
@@ -431,9 +402,6 @@ test_cases:
               x: -48.3
               y: -38.2
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 90.0
 
       streets:
         - PROJECT_NAME: street_1
@@ -458,7 +426,6 @@ test_cases:
               x: -46.0
               y: -127.1
               z: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
@@ -482,7 +449,6 @@ test_cases:
               x: -104.0
               y: -31.7
               z: 0.0
-              yaw: 180.0
 
     data_output:
       output_directory: /opt/carma-simulation/tests/output/
@@ -542,9 +508,6 @@ test_cases:
               x: 50.6
               y: 133.5
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
@@ -566,9 +529,6 @@ test_cases:
               x: 72.3
               y: 12.9
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
@@ -590,9 +550,6 @@ test_cases:
               x: -48.3
               y: -38.2
               z: 0.0
-              roll: 0.0
-              pitch: 0.0
-              yaw: 90.0
 
       streets:
         - PROJECT_NAME: street_1
@@ -617,7 +574,6 @@ test_cases:
               x: -46.0
               y: -127.1
               z: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
@@ -641,7 +597,6 @@ test_cases:
               x: -104.0
               y: -31.7
               z: 0.0
-              yaw: 180.0
 
         - PROJECT_NAME: street_3
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
@@ -665,7 +620,6 @@ test_cases:
               x: -49.9
               y: -17.3
               z: 0.0
-              yaw: 180.0
 
     data_output:
       output_directory: /opt/carma-simulation/tests/output/
