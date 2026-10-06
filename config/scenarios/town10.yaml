@@ -17,6 +17,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -56,8 +58,7 @@ test_cases:
       streets:
         - PROJECT_NAME: street_1
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
-          COMPOSE_OVERRIDES:
-            - ../compose/street-sensor-json.override.yml
+          COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastoldev
             STOL_TAG: develop
@@ -70,9 +71,12 @@ test_cases:
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
+              location:
+                x: -46.0
+                y: -127.1
             SPAWN_POSITION:
-              x: 64.17
-              y: 1.55
+              x: -46.0
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -97,6 +101,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -171,9 +177,16 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_1
+              type: SemanticLidar
+              location:
+                x: -46.0
+                y: -127.1
             SPAWN_POSITION:
-              x: 64.17
-              y: 1.55
+              x: -46.0
+              y: -127.1
               z: 0.0
               yaw: 180.0
 
@@ -199,6 +212,8 @@ test_cases:
           - ../compose/cdasim-town10-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
+          COMPOSE_PROFILES:
+            - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
@@ -297,9 +312,358 @@ test_cases:
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_1
+              type: SemanticLidar
+              location:
+                x: -46.0
+                y: -127.1
             SPAWN_POSITION:
-              x: 64.17
-              y: 1.55
+              x: -46.0
+              y: -127.1
+              z: 0.0
+              yaw: 180.0
+
+    data_output:
+      output_directory: /opt/carma-simulation/tests/output/
+      collect:
+        mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
+        rosbags: /opt/carma/logs
+        v2xhub_logs: /opt/v2xhub/logs
+
+  - label: test_case_4
+    runtime_seconds: 300
+    MAP: Town10
+
+    env_settings:
+      cdasim:
+        PROJECT_NAME: cdasim
+        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        CONFIG_IMAGE_PULL_POLICY: missing
+        COMPOSE_OVERRIDES:
+          - ../compose/cdasim-ns3-runtime.override.yml
+          - ../compose/cdasim-town10-evc.override.yml
+          - ../compose/cdasim-town10-sumo.override.yml
+        settings:
+          COMPOSE_PROFILES:
+            - evc
+          MOSAIC_SCENARIO: Town10
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CARLA_RENDER_OFFSCREEN: false
+          CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
+          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          CDASIM_RESOURCES:
+            pyeos_db: .pyeos.db
+            evc_sumo:
+              - evc_sumo_cfg.json
+              - tl_189.cfg
+            sumocfg: Town10_client_2.sumocfg
+
+      vehicles:
+        - PROJECT_NAME: platform_vehicle_1
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_20.yaml
+          settings:
+            VEHICLE_ID: carma_1
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: loop_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: 50.6
+              y: 133.5
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: platform_vehicle_2
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_25.yaml
+          settings:
+            VEHICLE_ID: carma_2
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: e2w_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: 72.3
+              y: 12.9
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: platform_vehicle_3
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_30.yaml
+          settings:
+            VEHICLE_ID: carma_3
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: n2s_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: -48.3
+              y: -38.2
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 90.0
+
+      streets:
+        - PROJECT_NAME: street_1
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_OVERRIDES: []
+          settings:
+            STOL_ORG: usdotfhwastoldev
+            STOL_TAG: develop
+            V2XHUB_VERSION: develop
+            INFRASTRUCTURE_ID: rsu_1234
+            INFRASTRUCTURE_NAME: Intersection 1
+            INFRASTRUCTURE_RESOURCES:
+              v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_1
+              type: SemanticLidar
+              location:
+                x: -46.0
+                y: -127.1
+            SPAWN_POSITION:
+              x: -46.0
+              y: -127.1
+              z: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: street_2
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_OVERRIDES: []
+          settings:
+            STOL_ORG: usdotfhwastoldev
+            STOL_TAG: develop
+            V2XHUB_VERSION: develop
+            INFRASTRUCTURE_ID: rsu_5678
+            INFRASTRUCTURE_NAME: Intersection 2
+            INFRASTRUCTURE_RESOURCES:
+              v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_2
+              type: SemanticLidar
+              location:
+                x: -104.0
+                y: -31.7
+            SPAWN_POSITION:
+              x: -104.0
+              y: -31.7
+              z: 0.0
+              yaw: 180.0
+
+    data_output:
+      output_directory: /opt/carma-simulation/tests/output/
+      collect:
+        mosaic_logs: /opt/carma-simulation/logs
+        carla_sensor_lib_logs: /opt/carla-sensor-lib
+        rosbags: /opt/carma/logs
+        v2xhub_logs: /opt/v2xhub/logs
+
+  - label: test_case_5
+    runtime_seconds: 300
+    MAP: Town10
+
+    env_settings:
+      cdasim:
+        PROJECT_NAME: cdasim
+        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        CONFIG_IMAGE_PULL_POLICY: missing
+        COMPOSE_OVERRIDES:
+          - ../compose/cdasim-ns3-runtime.override.yml
+          - ../compose/cdasim-town10-evc.override.yml
+          - ../compose/cdasim-town10-sumo.override.yml
+        settings:
+          COMPOSE_PROFILES:
+            - evc
+          MOSAIC_SCENARIO: Town10
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CARLA_RENDER_OFFSCREEN: false
+          CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
+          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          CDASIM_RESOURCES:
+            pyeos_db: .pyeos.db
+            evc_sumo:
+              - evc_sumo_cfg.json
+              - tl_189.cfg
+            sumocfg: Town10_client_2.sumocfg
+
+      vehicles:
+        - PROJECT_NAME: platform_vehicle_1
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_20.yaml
+          settings:
+            VEHICLE_ID: carma_1
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: loop_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: 50.6
+              y: 133.5
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: platform_vehicle_2
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_25.yaml
+          settings:
+            VEHICLE_ID: carma_2
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: e2w_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: 72.3
+              y: 12.9
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: platform_vehicle_3
+          COMPONENT: platform
+          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
+          CONFIG_IMAGE_PULL_POLICY: missing
+          COMPOSE_OVERRIDES: []
+          CONFIG_OVERRIDES:
+            VehicleConfigParams.yaml: speed_limit_30.yaml
+          settings:
+            VEHICLE_ID: carma_3
+            CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.11.0
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            SELECTED_ROUTE: n2s_route
+            START_DELAY_IN_SECONDS: 10.0
+            SPAWN_POINT:
+              x: -48.3
+              y: -38.2
+              z: 0.0
+              roll: 0.0
+              pitch: 0.0
+              yaw: 90.0
+
+      streets:
+        - PROJECT_NAME: street_1
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_OVERRIDES: []
+          settings:
+            STOL_ORG: usdotfhwastoldev
+            STOL_TAG: develop
+            V2XHUB_VERSION: develop
+            INFRASTRUCTURE_ID: rsu_1234
+            INFRASTRUCTURE_NAME: Intersection 1
+            INFRASTRUCTURE_RESOURCES:
+              v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_1
+              type: SemanticLidar
+              location:
+                x: -46.0
+                y: -127.1
+            SPAWN_POSITION:
+              x: -46.0
+              y: -127.1
+              z: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: street_2
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_OVERRIDES: []
+          settings:
+            STOL_ORG: usdotfhwastoldev
+            STOL_TAG: develop
+            V2XHUB_VERSION: develop
+            INFRASTRUCTURE_ID: rsu_5678
+            INFRASTRUCTURE_NAME: Intersection 2
+            INFRASTRUCTURE_RESOURCES:
+              v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_2
+              type: SemanticLidar
+              location:
+                x: -104.0
+                y: -31.7
+            SPAWN_POSITION:
+              x: -104.0
+              y: -31.7
+              z: 0.0
+              yaw: 180.0
+
+        - PROJECT_NAME: street_3
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_OVERRIDES: []
+          settings:
+            STOL_ORG: usdotfhwastoldev
+            STOL_TAG: develop
+            V2XHUB_VERSION: develop
+            INFRASTRUCTURE_ID: rsu_9012
+            INFRASTRUCTURE_NAME: Intersection 3
+            INFRASTRUCTURE_RESOURCES:
+              v2xhub_db_init: default.localhost.sql
+              sensor: lidar_config_template.json
+            SENSORS:
+              sensor_id: lidar_3
+              type: SemanticLidar
+              location:
+                x: -49.9
+                y: -17.3
+            SPAWN_POSITION:
+              x: -49.9
+              y: -17.3
               z: 0.0
               yaw: 180.0
 

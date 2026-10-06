@@ -191,7 +191,7 @@ class ScenarioGenerator:
         vehicles: List[Dict[str, Any]],
         streets: List[Dict[str, Any]],
     ) -> Optional[str]:
-        """Attach CDASim to vehicle networks and the shared street network."""
+        """Configure CDASim networks and the optional EVC service."""
 
         service_networks = {}
         networks = {}
@@ -212,14 +212,6 @@ class ScenarioGenerator:
             service_networks[network_key] = {
                 "aliases": ["cdasim"],
             }
-            evc_aliases = [
-                street["settings"]["EVC_SIM_HOST"]
-                for street in streets
-                if "EVC_SIM_HOST" in street["settings"]
-            ]
-            evc_network = {}
-            if evc_aliases:
-                evc_network["aliases"] = evc_aliases
             networks[network_key] = {
                 "external": True,
                 "name": street_network_name,
@@ -228,10 +220,14 @@ class ScenarioGenerator:
         if not networks:
             return None
 
-        services = {"cdasim": {"networks": service_networks}}
+        services = {}
+        if service_networks:
+            services["cdasim"] = {"networks": service_networks}
         if streets:
             services["econolite-virtual-controller"] = {
-                "networks": {"streets_shared": evc_network}
+                "networks": {
+                    "streets_shared": {"aliases": ["evc"]}
+                }
             }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"

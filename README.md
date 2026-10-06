@@ -54,7 +54,7 @@ between Compose projects. Its top-level sections are:
 
 2. **Generate Scenario Environment**
    - `ScenarioTopologyAllocator` loads `network_topology_template.json` and adds internal networks, Docker service hostnames, and only the instance-specific DNS aliases required to distinguish repeated endpoints. These values are not configured in scenario-suite files.
-   - All V2X Hub instances, CDA Sim, and the Econolite virtual controller attach to the shared `xil_streets_net`; each V2X Hub keeps its project-local database and web networks.
+   - All V2X Hub instances and CDASim attach to the shared `xil_streets_net`. The Econolite virtual controller joins that network only when enabled; each V2X Hub keeps its project-local database and web networks.
    - `ScenarioTopologyAllocator` applies the appropriate network template to each configured instance.
    - For each test case, `ScenarioRunner` writes a temporary resolved scenario YAML file.
    - This is passed to `ScenarioGenerator`, which dynamically generates:
@@ -100,6 +100,29 @@ Under the CDASim deployment's `settings`, `CDASIM_RESOURCES` maps each
 directory under `config/cdasim` to either one file name or a list of file
 names. Scenario Runner stages every listed file into the matching directory
 under `tmp` before Compose starts.
+
+EVC is an optional CDASim service. Enable its Compose profile under the CDASim
+deployment rather than configuring it on individual Street instances:
+
+```yaml
+COMPOSE_OVERRIDES:
+  - ../compose/cdasim-town10-evc.override.yml
+settings:
+  COMPOSE_PROFILES:
+    - evc
+  CDASIM_RESOURCES:
+    pyeos_db: .pyeos.db
+    evc_sumo:
+      - evc_sumo_cfg.json
+      - tl_189.cfg
+```
+
+Docker Compose activates the `evc` profile from `COMPOSE_PROFILES`, and the
+controller attaches to the shared Street network with the `evc` alias. Street
+entries do not control whether EVC starts. When EVC is not needed, omit the
+`evc` profile, its Compose override, and its entries under `CDASIM_RESOURCES`;
+Scenario Runner only resolves, validates, and stages resources declared by the
+test case.
 
 For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
 to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario

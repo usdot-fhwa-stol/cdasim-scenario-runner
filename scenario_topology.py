@@ -129,20 +129,15 @@ class ScenarioTopologyAllocator:
 
         return self._allocate_instance("messenger", index)
 
-    def allocate_street(self, index: int, evc_enabled: bool) -> Dict[str, str]:
+    def allocate_street(self, index: int) -> Dict[str, str]:
         """Allocate one Street/V2X Hub instance."""
 
         template = self.config["instance_topology_templates"]["street"]
         network = self.config["networks"][template["network"]]
-        conditions = {"evc_enabled": evc_enabled}
         return {
             "STREET_NETWORK_NAME": network["name"],
-            **self._endpoint_hosts(
-                template["private_endpoints"], index, conditions
-            ),
-            **self._endpoint_hosts(
-                template["simulation_endpoints"], index, conditions
-            ),
+            **self._endpoint_hosts(template["private_endpoints"], index),
+            **self._endpoint_hosts(template["simulation_endpoints"], index),
         }
 
 
@@ -265,9 +260,7 @@ def _apply_street_topology(
 
     for index, street in enumerate(streets, 1):
         settings = street["settings"]
-        allocation = topology.allocate_street(
-            index, bool((settings.get("EVC") or {}).get("enable", False))
-        )
+        allocation = topology.allocate_street(index)
         label =  street["PROJECT_NAME"]
         settings.update(
             {
@@ -285,17 +278,14 @@ def _apply_street_topology(
                 "SIM_V2X_PORT": 1517,
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
-                "V2XHUB_IP": "0.0.0.0",
+                "V2XHUB_IP": f"{label}-v2xhub-1",
                 "SIMULATION_MODE": "TRUE",
                 # For all external port set to zero. These configuration values are used to setup port mapping on host
                 # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
                 # find an open port on the host machine and use that.
-                "PHP_HTTP_EXTERNAL_PORT": 0,
-                "PHP_HTTPS_EXTERNAL_PORT": 0,
+                "PHP_EXTERNAL_HTTP_PORT": 0,
+                "PHP_EXTERNAL_HTTPS_PORT": 0,
                 "MUST_SENSOR_PLUGIN_EXTERNAL_PORT": 0, 
-                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_V2X_PORT": 0,
-                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_TIMESYNC_PORT": 0,
-                "CDASIM_ADAPTER_PLUGIN_EXTERNAL_REGISTRATION_PORT": 0,
                 "CARMA_CLOUD_EXTERNAL_PORT": 0,
                 "TIM_PLUGIN_EXTERNAL_PORT": 0,
                 "SPAT_PLUGIN_EXTERNAL_PORT": 0,

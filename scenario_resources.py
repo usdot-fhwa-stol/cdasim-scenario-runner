@@ -19,6 +19,7 @@ ROUTE_DIRECTORY = CONFIG_DIRECTORY / "routes"
 CDASIM_CONFIG_DIRECTORY = CONFIG_DIRECTORY / "cdasim"
 MAP_TARGET_DIRECTORY = Path("/opt/carma/maps")
 ROUTE_TARGET_DIRECTORY = Path("/opt/carma/routes")
+V2XHUB_DOWNLOAD_DIRECTORY = Path("/opt/v2xhub/download")
 
 
 class ScenarioResourceManager:
@@ -134,14 +135,40 @@ class ScenarioResourceManager:
                         f"{resource_name} configuration specified for streets "
                         f"instance {name} cannot be found in {source}!"
                     )
-                resources.append(
-                    {
-                        "source": str(source),
-                        "target": str(self.tmp_dir / f"{resource_name}_{name}"),
-                        "name": str(resource_name),
-                        "infrastructure": str(name),
-                    }
-                )
+                target = self.tmp_dir / f"{resource_name}_{name}"
+                if resource_name == "sensor":
+                    target = V2XHUB_DOWNLOAD_DIRECTORY
+                resource = {
+                    "source": str(source),
+                    "target": str(target),
+                    "name": str(resource_name),
+                    "infrastructure": str(name),
+                }
+                if resource_name == "sensor":
+                    sensor_settings = infrastructure.get("settings", {}).get(
+                        "SENSORS"
+                    ) or {}
+                    sensor_id = sensor_settings.get("sensor_id")
+                    sensor_type = sensor_settings.get("type")
+                    if not sensor_id or not sensor_type:
+                        raise ValueError(
+                            "SENSORS.sensor_id and SENSORS.type are required "
+                            f"for {name}"
+                        )
+                    resource["sensor_id"] = str(sensor_id)
+                    resource["sensor_type"] = str(sensor_type)
+                    sensor_location = sensor_settings.get("location")
+                    if sensor_location is not None:
+                        if (
+                            "x" not in sensor_location
+                            or "y" not in sensor_location
+                        ):
+                            raise ValueError(
+                                "SENSORS.location.x and SENSORS.location.y "
+                                f"are required for {name}"
+                            )
+                        resource["sensor_location"] = dict(sensor_location)
+                resources.append(resource)
         return resources
 
     def resolve(self, case: dict, label: str) -> dict:
@@ -171,36 +198,29 @@ class ScenarioResourceManager:
     def _prepare_sensor(
         self, resource: Dict[str, Any], infrastructure: Dict[str, Any]
     ) -> Path:
-        settings = infrastructure["settings"]
-        spawn = settings.get("SPAWN_POSITION", {})
-        sensor_settings = settings.get("SENSORS") or {}
-        if "x" not in spawn or "y" not in spawn:
-            raise ValueError(
-                "SPAWN_POSITION.x and SPAWN_POSITION.y are required for "
-                f"sensor configuration on {resource['infrastructure']}"
-            )
-        if not sensor_settings.get("sensor_id") or not sensor_settings.get("type"):
-            raise ValueError(
-                "SENSORS.sensor_id and SENSORS.type are required for "
-                f"{resource['infrastructure']}"
-            )
-
         source = Path(resource["source"])
         sensors = json.loads(source.read_text(encoding="utf-8"))
         if not isinstance(sensors, list) or len(sensors) != 1:
             raise ValueError(f"Expected exactly one sensor in {source}")
         sensor = sensors[0]
-        sensor["sensorId"] = str(sensor_settings["sensor_id"])
-        sensor["type"] = str(sensor_settings["type"])
+        sensor["sensorId"] = resource["sensor_id"]
+        sensor["type"] = resource["sensor_type"]
         location = sensor.get("ref", {}).get("location")
         if not isinstance(location, dict):
-            raise ValueError(f"Sensor in {source} must define ref.location")
+            raise ValueError(
+                f"Sensor {resource['sensor_id']!r} in {source} must define "
+                "ref.location"
+            )
         location.pop("_comment", None)
-        location.update({"x": spawn["x"], "y": spawn["y"]})
+        if "sensor_location" in resource:
+            location.update(resource["sensor_location"])
 
-        generated_dir = self.tmp_dir / f"generated-sensor-{resource['infrastructure']}"
+        generated_dir = (
+            self.tmp_dir
+            / f"generated-sensor-json-{resource['infrastructure']}"
+        )
         generated_dir.mkdir(parents=True, exist_ok=True)
-        generated = generated_dir / "sensors.json"
+        generated = generated_dir / f"sensors-{resource['infrastructure']}.json"
         generated.write_text(json.dumps(sensors, indent=2) + "\n", encoding="utf-8")
         return generated
 
@@ -225,9 +245,14 @@ class ScenarioResourceManager:
             processor = processors.get(resource["name"])
             if processor:
                 resource["source"] = str(processor(resource, infrastructure))
-            infrastructure["settings"][
-                self._resource_env_name(resource["name"])
-            ] = str(Path(resource["target"]).resolve())
+            if resource["name"] == "sensor":
+                infrastructure["settings"]["SENSOR_JSON_FILE_PATH"] = (
+                    f"/var/www/download/{Path(resource['source']).name}"
+                )
+            else:
+                infrastructure["settings"][
+                    self._resource_env_name(resource["name"])
+                ] = str(Path(resource["target"]).resolve())
 
     def cdasim_env_settings(self, cdasim: dict, scenario_resources: dict) -> dict:
         """Return CDASim settings containing absolute staged resource paths."""
