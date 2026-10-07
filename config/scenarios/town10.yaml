@@ -293,7 +293,7 @@ test_cases:
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
-              x: -48.3
+              x: -52.0
               y: -38.2
               z: 0.0
               roll: 0.0
@@ -428,7 +428,7 @@ test_cases:
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
-              x: -48.3
+              x: -52.0
               y: -38.2
               z: 0.0
               roll: 0.0
@@ -587,7 +587,7 @@ test_cases:
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
-              x: -48.3
+              x: -52.0
               y: -38.2
               z: 0.0
               roll: 0.0
