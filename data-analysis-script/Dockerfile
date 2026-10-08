@@ -19,6 +19,8 @@ ARG DOCKER_ORG="usdotfhwastoldev"
 ARG DOCKER_TAG="develop-humble"
 FROM ${DOCKER_ORG}/carma-base:${DOCKER_TAG}
 
+ARG CARMA_ANALYTICS_BRANCH="develop"
+
 LABEL Description="CDASim data analysis image: cdasim log/mcap analyzers plus CARMA Platform control/regression analysis, with carma_planning_msgs built from source."
 
 USER carma
