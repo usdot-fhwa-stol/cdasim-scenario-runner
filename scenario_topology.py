@@ -243,7 +243,7 @@ def _apply_street_topology(
                 "MYSQL_PASSWORD": "ChangeMe123!",
                 "V2XHUB_USER": "tester",
                 "V2XHUB_PASSWORD": "ChangeMe123!",
-                "SIMULATION_MODE": True,
+                "SIMULATION_MODE": "TRUE",
                 "SIMULATION_HOST": topology.core["CDASIM_SIM_HOST"],
                 "SIMULATION_IP": topology.core["CDASIM_SIM_HOST"],
                 "SIMULATION_REGISTRATION_PORT": 1615,
@@ -251,9 +251,9 @@ def _apply_street_topology(
                 "SIM_V2X_PORT": 1517,
                 "SIM_INTERACTION_PORT": 7576,
                 "V2X_PORT": 8686,
-                "SIM_LOCATION_X": settings["SPAWN_LOCATION"]["x"],
-                "SIM_LOCATION_Y": settings["SPAWN_LOCATION"]["y"]
-                "SIM_LOCATION_Z": settings["SPAWN_LOCATION"]["z"]
+                "SIM_LOCATION_X": settings["SPAWN_POSITION"]["x"],
+                "SIM_LOCATION_Y": settings["SPAWN_POSITION"]["y"],
+                "SIM_LOCATION_Z": settings["SPAWN_POSITION"]["z"],
                 "V2XHUB_IP": f"{label}-v2xhub-1",
                 # For all external port set to zero. These configuration values are used to setup port mapping on host
                 # To avoid port conflicts for multiple infrastructure instances, zero can be used. This will allow docker to
