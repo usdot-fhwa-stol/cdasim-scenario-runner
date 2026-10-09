@@ -2,10 +2,6 @@ services:
   econolite-virtual-controller:
     volumes:
       - type: bind
-        source: "${EVC_SUMO_RESOURCE_PATH:?EVC_SUMO_RESOURCE_PATH is required}/evc_sumo_cfg.json"
+        source: "${EVC_SUMO_RESOURCE_PATH:?EVC_SUMO_RESOURCE_PATH is required}/${EVC_SUMO_CFG_FILE:-evc_sumo_cfg_468_719_189.json}"
         target: /home/carma/src/resources/evc_sumo_cfg.json
-        read_only: true
-      - type: bind
-        source: "${EVC_SUMO_RESOURCE_PATH:?EVC_SUMO_RESOURCE_PATH is required}/tl_189.cfg"
-        target: /home/carma/src/resources/tl_189.cfg
         read_only: true

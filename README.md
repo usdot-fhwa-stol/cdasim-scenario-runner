@@ -113,7 +113,7 @@ settings:
   CDASIM_RESOURCES:
     pyeos_db: .pyeos.db
     evc_sumo:
-      - evc_sumo_cfg.json
+      - evc_sumo_cfg_468_719_189.json
       - tl_189.cfg
 ```
 
@@ -233,7 +233,7 @@ project_root/
 ├── config/
 |   ├── cdasim/
 │   │   ├── evc_sumo/
-|   |   |       └── evc_sumo_cfg.json
+|   |   |       └── evc_sumo_cfg_468_719_189.json
 │   │   ├── pyeos_db/
 |   |   |       └── .pyeos.db
 |   ├── infrastructure/
