@@ -1,3 +1,4 @@
+#!/bin/bash
 #  Copyright (C) 2026 LEIDOS.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License"); you may not
@@ -12,7 +13,6 @@
 #  License for the specific language governing permissions and limitations under
 #  the License.
 
-#!/bin/bash
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,6 +28,7 @@ echo "  Context:    $CONTEXT_DIR"
 
 docker build \
     -f "$DOCKERFILE" \
+    --build-arg "CARMA_ANALYTICS_BRANCH=${CARMA_ANALYTICS_BRANCH:-develop}" \
     -t "${IMAGE_NAME}:${IMAGE_TAG}" \
     "$CONTEXT_DIR"
 
