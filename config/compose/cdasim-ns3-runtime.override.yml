@@ -5,3 +5,7 @@ services:
         source: "${CDASIM_RUNTIME_FILE:?CDASIM_RUNTIME_FILE must point to runtime.json}"
         target: /opt/carma-simulation/etc/runtime.json
         read_only: true
+      - type: bind
+        source: "${NS3_FEDERATE_CONFIG_FILE:?NS3_FEDERATE_CONFIG_FILE must point to the selected radio configuration}"
+        target: "/opt/carma-simulation/scenarios/${MOSAIC_SCENARIO:?MOSAIC_SCENARIO is required}/ns3/ns3_federate_config.xml"
+        read_only: true
