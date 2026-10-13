@@ -106,7 +106,7 @@ deployment rather than configuring it on individual Street instances:
 
 ```yaml
 COMPOSE_OVERRIDES:
-  - ../compose/cdasim-town10-evc.override.yml
+  - ../compose/cdasim-evc.override.yml
 settings:
   COMPOSE_PROFILES:
     - evc
@@ -114,6 +114,8 @@ settings:
     pyeos_db: .pyeos.db
     evc_sumo:
       - evc_sumo_cfg_468_719_189.json
+      - tl_468.cfg
+      - tl_719.cfg
       - tl_189.cfg
 ```
 
@@ -123,6 +125,45 @@ entries do not control whether EVC starts. When EVC is not needed, omit the
 `evc` profile, its Compose override, and its entries under `CDASIM_RESOURCES`;
 Scenario Runner only resolves, validates, and stages resources declared by the
 test case.
+
+Each optional `spat_forwarding` object identifies its destination with the
+stable Street `PROJECT_NAME`; users do not need to know generated Docker DNS
+aliases:
+
+```json
+"spat_forwarding": {
+  "listen_ip": "127.0.0.1",
+  "listen_port": 16054,
+  "destination_infrastructure": "street_2",
+  "destination_port": 6053
+}
+```
+
+Scenario Runner validates the reference and renders the selected EVC-SUMO JSON
+with the corresponding `V2XHUB_IP`. The EVC image then reads that runtime
+JSON. EOS sends SPaT to a controller-specific localhost port, and the EVC
+startup script forwards it through Docker DNS to the matching V2X Hub:
+
+| Controller | EOS SPaT destination | Street destination |
+| --- | --- | --- |
+| `tl_468` | `127.0.0.1:16053` | `street_1:6053` |
+| `tl_719` | `127.0.0.1:16054` | `street_2:6053` |
+| `tl_189` | `127.0.0.1:16055` | `street_3:6053` |
+
+The EVC Compose override mounts the complete staged `evc_sumo` resource
+directory, so adding another controller does not require another Compose
+override or relay service. Add its CFG to `CDASIM_RESOURCES`, add its controller
+and `spat_forwarding` entries to the selected EVC-SUMO JSON, reference the
+target Street by `PROJECT_NAME`, and export the EOS CFG with the matching unique
+localhost destination. Reordering `streets` does not change the logical route;
+Scenario Runner resolves the destination against the current topology.
+
+Set `EVC_IMAGE` in the CDASim settings when testing a newly built `evc-sumo`
+image. It defaults to `usdotfhwastol/econolite-virtual-controller:save`.
+
+The checked-in EOS CFG files must be exported by EOS with these localhost
+destinations. Do not patch the binary CFG files directly; EOS validates their
+internal database representation and may otherwise fall back to defaults.
 
 For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
 to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario
@@ -233,7 +274,10 @@ project_root/
 ├── config/
 |   ├── cdasim/
 │   │   ├── evc_sumo/
-|   |   |       └── evc_sumo_cfg_468_719_189.json
+|   |   |       ├── evc_sumo_cfg_468_719_189.json
+|   |   |       ├── tl_468.cfg
+|   |   |       ├── tl_719.cfg
+|   |   |       └── tl_189.cfg
 │   │   ├── pyeos_db/
 |   |   |       └── .pyeos.db
 |   ├── infrastructure/

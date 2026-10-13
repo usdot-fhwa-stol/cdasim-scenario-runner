@@ -166,6 +166,124 @@ class ScenarioGenerator:
             ] = str(Path(resource["target"]).resolve())
         return env_settings
 
+    def _resolve_evc_spat_destinations(self) -> None:
+        """Render logical EVC SPaT targets as Docker DNS hostnames.
+
+        Source EVC-SUMO JSON files identify a Street instance by its stable
+        ``PROJECT_NAME``. Scenario topology has already assigned that instance
+        a simulation-network hostname in ``V2XHUB_IP``. This method adds
+        the resolved hostname to a generated copy of the selected JSON and
+        stages that copy instead of modifying the repository resource.
+        """
+
+        env_settings = self.config.get("env_settings", {})
+        cdasim_settings = env_settings.get("cdasim", {}).get("settings", {})
+        config_filename = cdasim_settings.get("EVC_SUMO_CFG_FILE")
+        if not config_filename:
+            return
+        if (
+            not isinstance(config_filename, str)
+            or Path(config_filename).name != config_filename
+        ):
+            raise ValueError("EVC_SUMO_CFG_FILE must be a file name")
+
+        resources = self.config.get("scenario_resources", {}).get(
+            "cdasim_configs", []
+        )
+        selected_resources = [
+            resource
+            for resource in resources
+            if resource.get("name") == "evc_sumo"
+            and Path(resource["source"]).name == config_filename
+        ]
+        if len(selected_resources) != 1:
+            raise ValueError(
+                f"EVC_SUMO_CFG_FILE {config_filename!r} must match exactly one "
+                "evc_sumo resource"
+            )
+
+        street_hosts: Dict[str, str] = {}
+        for street in env_settings.get("streets", []):
+            project_name = street.get("PROJECT_NAME")
+            if not isinstance(project_name, str) or not project_name:
+                raise ValueError("Every Street instance must have a PROJECT_NAME")
+            if project_name in street_hosts:
+                raise ValueError(
+                    f"Street PROJECT_NAME {project_name!r} is not unique"
+                )
+            destination_host = street.get("settings", {}).get(
+                "V2XHUB_IP"
+            )
+            if not isinstance(destination_host, str) or not destination_host:
+                raise ValueError(
+                    f"Street {project_name!r} has no V2XHUB_IP allocation"
+                )
+            street_hosts[project_name] = destination_host
+
+        selected_resource = selected_resources[0]
+        source_path = Path(selected_resource["source"])
+        with source_path.open("r", encoding="utf-8") as config_file:
+            evc_config = json.load(config_file)
+
+        controllers = evc_config.get("controllers")
+        if not isinstance(controllers, list):
+            raise ValueError(
+                f"EVC-SUMO configuration {source_path} must contain a "
+                "controllers list"
+            )
+
+        rendered = False
+        for controller_index, controller in enumerate(controllers, 1):
+            route = controller.get("spat_forwarding")
+            if route is None:
+                continue
+            if not isinstance(route, dict):
+                raise ValueError(
+                    f"Controller {controller_index} spat_forwarding must be a mapping"
+                )
+
+            infrastructure = route.get("destination_infrastructure")
+            destination_host = route.get("destination_host")
+            if infrastructure is None:
+                if not isinstance(destination_host, str) or not destination_host:
+                    raise ValueError(
+                        f"Controller {controller_index} spat_forwarding must define "
+                        "destination_infrastructure or destination_host"
+                    )
+                continue
+            if not isinstance(infrastructure, str) or not infrastructure:
+                raise ValueError(
+                    f"Controller {controller_index} destination_infrastructure "
+                    "must be a non-empty string"
+                )
+            if destination_host is not None:
+                raise ValueError(
+                    f"Controller {controller_index} cannot define both "
+                    "destination_infrastructure and destination_host"
+                )
+            try:
+                route["destination_host"] = street_hosts[infrastructure]
+            except KeyError as exc:
+                available = ", ".join(street_hosts) or "none"
+                raise ValueError(
+                    f"Controller {controller_index} references unknown Street "
+                    f"PROJECT_NAME {infrastructure!r}; available: {available}"
+                ) from exc
+            rendered = True
+
+        if not rendered:
+            return
+
+        output_directory = self.tmp_dir / "resolved-evc-sumo"
+        output_directory.mkdir(parents=True, exist_ok=True)
+        output_path = output_directory / config_filename
+        output_path.write_text(
+            json.dumps(evc_config, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        selected_resource["source"] = str(output_path)
+        print(f"Resolved EVC SPaT destinations in {output_path}")
+
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
     ) -> str:
@@ -1010,6 +1128,7 @@ class ScenarioGenerator:
         es = self.config['env_settings']
 
         self._prepare_sensor_resources()
+        self._resolve_evc_spat_destinations()
 
         cdasim_settings = es['cdasim'].get('settings', {})
         if 'NS3_FEDERATE_IMAGE' in cdasim_settings:
