@@ -20,7 +20,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -105,7 +105,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -217,7 +217,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -353,7 +353,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -514,7 +514,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
