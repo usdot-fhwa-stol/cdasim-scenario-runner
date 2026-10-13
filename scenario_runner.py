@@ -72,16 +72,27 @@ class ScenarioRunner:
         self.test_cases = []
         self.tmp_dir = Path("tmp").resolve()
         self.collector = DataCollector()
-        self.analyzer = DataAnalyzer()
 
     def load_parameters(self):
         if not self.config_path.exists():
             raise FileNotFoundError(f"{self.config_path} not found")
         with open(self.config_path, 'r') as f:
             data = yaml.safe_load(f)
+
         self.test_cases = data.get("test_cases", [])
         if not self.test_cases:
             raise ValueError(f"No 'test_cases' found in {self.config_path}")
+
+        for case in self.test_cases:
+            data_output = case.get("data_output", {})
+            if not isinstance(data_output, dict):
+                raise ValueError("'data_output' must be a mapping")
+            analysis_image = data_output.get("data_analyzer_image")
+            if not isinstance(analysis_image, str) or not analysis_image.strip():
+                raise ValueError(
+                    "'data_output.data_analyzer_image' is required and must be "
+                    "a non-empty string"
+                )
         print(f"Loaded {len(self.test_cases)} scenario(s)")
 
     def _selected_test_cases(self):
@@ -609,7 +620,8 @@ class ScenarioRunner:
         for case_dir, case in collected:
             print("Running data analysis...")
             label = case.get("label", str(case_dir))
-            failures = self.analyzer.analyze(case_dir, case)
+            image = case["data_output"]["data_analyzer_image"].strip()
+            failures = DataAnalyzer(image).analyze(case_dir, case)
             if failures:
                 analysis_failures[label] = failures
 

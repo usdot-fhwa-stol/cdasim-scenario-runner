@@ -96,6 +96,19 @@ configure those entries:
 | **`COMPOSE_FILE`** | A repository-local base Compose file or a docker compose OC artifact used instead of `CONFIG_IMAGE_FULL`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
 
+The required `data_output.data_analyzer_image` field selects the published
+image used after collecting that test case's data:
+
+```yaml
+data_output:
+  data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+```
+
+Release configurations can pin the corresponding
+`usdotfhwastol/cdasim-data-analysis` release tag. The image is built and
+published by `carma-analytics-fotda`, which owns both the CDASim and CARMA
+Platform analysis scripts.
+
 Under the CDASim deployment's `settings`, `CDASIM_RESOURCES` maps each
 directory under `config/cdasim` to either one file name or a list of file
 names. Scenario Runner stages every listed file into the matching directory

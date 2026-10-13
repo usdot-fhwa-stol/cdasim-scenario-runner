@@ -82,6 +82,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -193,6 +194,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -329,6 +331,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -490,6 +493,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -676,6 +680,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs

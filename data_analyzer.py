@@ -20,7 +20,7 @@ import sys
 
 class DataAnalyzer:
 
-    def __init__(self, image: str = "cdasim-data-analysis:latest"):
+    def __init__(self, image: str):
         self.image = image
 
     def analyze(self, case_dir: Path, case: dict) -> list:
