@@ -2,7 +2,7 @@
   "controllers": [
     {
       "controllerId": 3,
-      "controllerCfgPath": "/home/carma/src/resources/tl_468.cfg",
+      "controllerCfgPath": "/home/carma/src/resources/intersection_1_tl_468_spat_16053.cfg",
       "moe_dir": null,
       "start_time": 0,
       "bind_ip": null,

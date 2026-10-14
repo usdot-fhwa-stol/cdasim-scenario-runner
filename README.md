@@ -114,9 +114,9 @@ settings:
     pyeos_db: .pyeos.db
     evc_sumo:
       - evc_sumo_cfg_468_719_189.json
-      - tl_468.cfg
-      - tl_719.cfg
-      - tl_189.cfg
+      - intersection_1_tl_468_spat_16053.cfg
+      - intersection_2_tl_719_spat_16054.cfg
+      - intersection_3_tl_189_spat_16055.cfg
 ```
 
 Docker Compose activates the `evc` profile from `COMPOSE_PROFILES`, and the
@@ -146,9 +146,9 @@ startup script forwards it through Docker DNS to the matching V2X Hub:
 
 | Controller | EOS SPaT destination | Street destination |
 | --- | --- | --- |
-| `tl_468` | `127.0.0.1:16053` | `street_1:6053` |
-| `tl_719` | `127.0.0.1:16054` | `street_2:6053` |
-| `tl_189` | `127.0.0.1:16055` | `street_3:6053` |
+| `intersection_1_tl_468_spat_16053.cfg` | `127.0.0.1:16053` | `street_1:6053` |
+| `intersection_2_tl_719_spat_16054.cfg` | `127.0.0.1:16054` | `street_2:6053` |
+| `intersection_3_tl_189_spat_16055.cfg` | `127.0.0.1:16055` | `street_3:6053` |
 
 The EVC Compose override mounts the complete staged `evc_sumo` resource
 directory, so adding another controller does not require another Compose
@@ -275,9 +275,9 @@ project_root/
 |   ├── cdasim/
 │   │   ├── evc_sumo/
 |   |   |       ├── evc_sumo_cfg_468_719_189.json
-|   |   |       ├── tl_468.cfg
-|   |   |       ├── tl_719.cfg
-|   |   |       └── tl_189.cfg
+|   |   |       ├── intersection_1_tl_468_spat_16053.cfg
+|   |   |       ├── intersection_2_tl_719_spat_16054.cfg
+|   |   |       └── intersection_3_tl_189_spat_16055.cfg
 │   │   ├── pyeos_db/
 |   |   |       └── .pyeos.db
 |   ├── infrastructure/
