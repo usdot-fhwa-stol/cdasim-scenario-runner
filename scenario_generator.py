@@ -232,7 +232,6 @@ class ScenarioGenerator:
                 "controllers list"
             )
 
-        rendered = False
         for controller_index, controller in enumerate(controllers, 1):
             route = controller.get("spat_forwarding")
             if route is None:
@@ -269,20 +268,15 @@ class ScenarioGenerator:
                     f"Controller {controller_index} references unknown Street "
                     f"PROJECT_NAME {infrastructure!r}; available: {available}"
                 ) from exc
-            rendered = True
-
-        if not rendered:
-            return
-
         output_directory = self.tmp_dir / "resolved-evc-sumo"
         output_directory.mkdir(parents=True, exist_ok=True)
-        output_path = output_directory / config_filename
+        output_path = output_directory / "evc_sumo_cfg.json"
         output_path.write_text(
             json.dumps(evc_config, indent=2) + "\n",
             encoding="utf-8",
         )
         selected_resource["source"] = str(output_path)
-        print(f"Resolved EVC SPaT destinations in {output_path}")
+        print(f"Prepared EVC-SUMO configuration at {output_path}")
 
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]

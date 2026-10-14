@@ -58,7 +58,7 @@ services:
       - evc
     # Using latest tag will always attempt to pull from remote ignoring any cli params.
     # Will fail if no remote image exists
-    image: usdotfhwastol/econolite-virtual-controller:save
+    image: "${EVC_IMAGE:-usdotfhwastol/econolite-virtual-controller:save}"
     container_name: evc
     restart: always
     networks:
@@ -68,6 +68,7 @@ services:
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - "${PYEOS_DB_RESOURCE_PATH:-./pyeos_db}:/home/carma/shared_data"
+      - "${EVC_SUMO_RESOURCE_PATH:?EVC_SUMO_RESOURCE_PATH is required}:/home/carma/src/resources:ro"
     depends_on:
       - cdasim
     command: >
