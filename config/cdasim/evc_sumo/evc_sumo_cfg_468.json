@@ -11,31 +11,9 @@
       "harness_port": 0,
       "sumoTlId": 468,
       "enableWebPanel": true,
-      "evcPhases": [
-        {
-          "evcPhaseId": 2,
-          "sumoTlStateIndex": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        {
-          "evcPhaseId": 6,
-          "sumoTlStateIndex": [
-            4,
-            5
-          ]
-        },
-        {
-          "evcPhaseId": 4,
-          "sumoTlStateIndex": [
-            6,
-            7
-          ]
-        }
-      ]
+      "evcPhases": [{"evcPhaseId": 2, "sumoTlStateIndex":[0,1,2,3]},
+                    {"evcPhaseId": 6, "sumoTlStateIndex":[4,5]},
+                    {"evcPhaseId": 4, "sumoTlStateIndex":[6,7]}]
     }
   ]
 }
