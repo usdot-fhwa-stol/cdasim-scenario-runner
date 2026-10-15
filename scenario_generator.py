@@ -676,40 +676,6 @@ class ScenarioGenerator:
 
         if streets:
             services["econolite-virtual-controller"] = {
-                "image": (
-                    "${EVC_IMAGE:-usdotfhwastol/"
-                    "econolite-virtual-controller:save}"
-                ),
-                "environment": {
-                    "EVC_SPAT_FORWARDING_JSON": (
-                        "${EVC_SPAT_FORWARDING_JSON:-[]}"
-                    )
-                },
-                "volumes": [
-                    {
-                        "type": "bind",
-                        "source": (
-                            "${EVC_SUMO_RESOURCE_PATH:"
-                            "?EVC_SUMO_RESOURCE_PATH is required}"
-                        ),
-                        "target": "/home/carma/src/resources",
-                        "read_only": True,
-                    },
-                    {
-                        "type": "bind",
-                        "source": (
-                            "${EVC_SUMO_RESOURCE_PATH:"
-                            "?EVC_SUMO_RESOURCE_PATH is required}/"
-                            "${EVC_SUMO_CFG_FILE:"
-                            "?EVC_SUMO_CFG_FILE is required}"
-                        ),
-                        "target": (
-                            "/home/carma/src/resources/"
-                            "evc_sumo_cfg.json"
-                        ),
-                        "read_only": True,
-                    },
-                ],
                 "networks": {
                     "streets_shared": {"aliases": ["evc"]}
                 },

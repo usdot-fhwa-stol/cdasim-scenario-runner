@@ -19,7 +19,7 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           EVC_IMAGE: codex/econolite-virtual-controller:evc-forwarding
           CARLA_RENDER_OFFSCREEN: false
