@@ -9,12 +9,6 @@
       "web_port": 0,
       "snmp_port": 5055,
       "harness_port": 0,
-      "spat_forwarding": {
-        "listen_ip": "127.0.0.1",
-        "listen_port": 16053,
-        "destination_infrastructure": "street_1",
-        "destination_port": 6053
-      },
       "sumoTlId": 468,
       "enableWebPanel": true,
       "evcPhases": [
@@ -52,12 +46,6 @@
       "web_port": 0,
       "snmp_port": 5055,
       "harness_port": 0,
-      "spat_forwarding": {
-        "listen_ip": "127.0.0.1",
-        "listen_port": 16054,
-        "destination_infrastructure": "street_2",
-        "destination_port": 6053
-      },
       "sumoTlId": 719,
       "enableWebPanel": true,
       "evcPhases": [

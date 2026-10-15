@@ -19,12 +19,18 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          EVC_IMAGE: codex/econolite-virtual-controller:evc-forwarding
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
@@ -109,6 +115,11 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
@@ -220,6 +231,11 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
@@ -355,6 +371,15 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
@@ -515,6 +540,19 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719_189.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16055
+              destination_infrastructure: street_3
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:

@@ -65,10 +65,12 @@ services:
       carma_sim_net:
     environment:
       - DISPLAY=${DISPLAY}
+      - EVC_SPAT_FORWARDING_JSON=${EVC_SPAT_FORWARDING_JSON:-[]}
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
       - "${PYEOS_DB_RESOURCE_PATH:-./pyeos_db}:/home/carma/shared_data"
       - "${EVC_SUMO_RESOURCE_PATH:-./evc_sumo}:/home/carma/src/resources:ro"
+      - "${EVC_SUMO_RESOURCE_PATH:-./evc_sumo}/${EVC_SUMO_CFG_FILE:-evc_sumo_cfg.json}:/home/carma/src/resources/evc_sumo_cfg.json:ro"
     depends_on:
       - cdasim
     command: >

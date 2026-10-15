@@ -124,39 +124,38 @@ entries do not control whether EVC starts. When EVC is not needed, omit the
 Scenario Runner only resolves, validates, and stages resources declared by the
 test case.
 
-Each optional `spat_forwarding` object identifies its destination with the
-stable Street `PROJECT_NAME`; users do not need to know generated Docker DNS
-aliases:
+Define EVC SPaT forwarding routes in the CDASim deployment settings. Each
+route identifies its destination with the stable Street `PROJECT_NAME`, so
+scenario authors do not need to know generated Docker DNS names:
 
-```json
-"spat_forwarding": {
-  "listen_ip": "127.0.0.1",
-  "listen_port": 16054,
-  "destination_infrastructure": "street_2",
-  "destination_port": 6053
-}
+```yaml
+settings:
+  EVC_SPAT_FORWARDING:
+    - listen_ip: 127.0.0.1
+      listen_port: 16054
+      destination_infrastructure: street_2
+      destination_port: 6053
 ```
 
-Scenario Runner validates the reference and renders the selected EVC-SUMO JSON
-with the corresponding `V2XHUB_IP`, stages it as `evc_sumo_cfg.json`, and
-mounts the complete resource directory over `/home/carma/src/resources`. The
-EVC startup script reads that default configuration path and forwards each
-controller's SPaT through Docker DNS to the matching V2X Hub:
+Scenario Runner validates each logical reference against the scenario's Street
+entries, resolves it to that instance's generated `V2XHUB_IP`, and serializes
+the resolved routes into `EVC_SPAT_FORWARDING_JSON` for the EVC container. It
+does not modify `evc_sumo_cfg.json`; that file remains owned by EVC-SUMO and
+contains only controller-specific configuration.
 
-| Controller | EOS SPaT destination | Street destination |
+| Controller | EOS SPaT destination | Logical Street destination |
 | --- | --- | --- |
 | `intersection_1_tl_468_spat_16053.cfg` | `127.0.0.1:16053` | `street_1:6053` |
 | `intersection_2_tl_719_spat_16054.cfg` | `127.0.0.1:16054` | `street_2:6053` |
 | `intersection_3_tl_189_spat_16055.cfg` | `127.0.0.1:16055` | `street_3:6053` |
 
-The base CDASim Compose service mounts the complete staged `evc_sumo` resource
-directory over the EVC resource directory, so adding another controller does
-not require another Compose service or relay. Add its CFG to
-`CDASIM_RESOURCES`, add its controller and `spat_forwarding` entries to the
-selected EVC-SUMO JSON, reference the target Street by `PROJECT_NAME`, and
-export the EOS CFG with the matching unique localhost destination. Reordering
-`streets` does not change the logical route; Scenario Runner resolves the
-destination against the current topology.
+The base CDASim Compose service mounts the complete staged `evc_sumo`
+resource directory over the EVC resource directory. Adding another controller
+does not require another Compose service: add its CFG to `CDASIM_RESOURCES`,
+add its controller entry to the selected EVC-SUMO JSON, add an
+`EVC_SPAT_FORWARDING` route to the scenario, and export the EOS CFG with the
+matching unique localhost destination. Reordering `streets` does not change
+the route because Scenario Runner resolves the destination by `PROJECT_NAME`.
 
 Set `EVC_IMAGE` in the CDASim settings when testing a newly built `evc-sumo`
 image. It defaults to `usdotfhwastol/econolite-virtual-controller:save`.
