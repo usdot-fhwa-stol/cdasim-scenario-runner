@@ -146,12 +146,14 @@ class ScenarioGenerator:
         return str(env_path)
 
     def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
-        """Add absolute staged-resource paths to the CDASim environment.
+        """Add generated deployment values to the CDASim environment.
 
         Relative bind sources in a Compose OCI artifact resolve against the
         artifact cache rather than Scenario Runner's temporary directory. The
         Compose files and scenario-specific overrides consume these variables
-        when mounting resources staged under ``tmp/``.
+        when mounting resources staged under ``tmp/``. EVC SPaT destinations
+        are resolved here as deployment environment rather than by modifying
+        the EVC-SUMO-owned configuration file.
         """
 
         env_settings = {
@@ -171,46 +173,14 @@ class ScenarioGenerator:
             env_settings["settings"][
                 f"{resource_name}_RESOURCE_PATH"
             ] = str(Path(resource["target"]).resolve())
-        return env_settings
-
-    def _resolve_evc_spat_destinations(self) -> None:
-        """Render logical EVC SPaT targets as Docker DNS hostnames.
-
-        Source EVC-SUMO JSON files identify a Street instance by its stable
-        ``PROJECT_NAME``. Scenario topology has already assigned that instance
-        a simulation-network hostname in ``V2XHUB_IP``. This method adds
-        the resolved hostname to a generated copy of the selected JSON and
-        stages that copy instead of modifying the repository resource.
-        """
-
-        env_settings = self.config.get("env_settings", {})
-        cdasim_settings = env_settings.get("cdasim", {}).get("settings", {})
-        config_filename = cdasim_settings.get("EVC_SUMO_CFG_FILE")
-        if not config_filename:
-            return
-        if (
-            not isinstance(config_filename, str)
-            or Path(config_filename).name != config_filename
-        ):
-            raise ValueError("EVC_SUMO_CFG_FILE must be a file name")
-
-        resources = self.config.get("scenario_resources", {}).get(
-            "cdasim_configs", []
-        )
-        selected_resources = [
-            resource
-            for resource in resources
-            if resource.get("name") == "evc_sumo"
-            and Path(resource["source"]).name == config_filename
-        ]
-        if len(selected_resources) != 1:
-            raise ValueError(
-                f"EVC_SUMO_CFG_FILE {config_filename!r} must match exactly one "
-                "evc_sumo resource"
-            )
+        routes = env_settings["settings"].pop("EVC_SPAT_FORWARDING", None)
+        if routes is None:
+            return env_settings
+        if not isinstance(routes, list):
+            raise ValueError("EVC_SPAT_FORWARDING must be a list")
 
         street_hosts: Dict[str, str] = {}
-        for street in env_settings.get("streets", []):
+        for street in self.config.get("env_settings", {}).get("streets", []):
             project_name = street.get("PROJECT_NAME")
             if not isinstance(project_name, str) or not project_name:
                 raise ValueError("Every Street instance must have a PROJECT_NAME")
@@ -218,78 +188,78 @@ class ScenarioGenerator:
                 raise ValueError(
                     f"Street PROJECT_NAME {project_name!r} is not unique"
                 )
-            destination_host = street.get("settings", {}).get(
-                "V2XHUB_IP"
-            )
+            destination_host = street.get("settings", {}).get("V2XHUB_IP")
             if not isinstance(destination_host, str) or not destination_host:
                 raise ValueError(
                     f"Street {project_name!r} has no V2XHUB_IP allocation"
                 )
             street_hosts[project_name] = destination_host
 
-        selected_resource = selected_resources[0]
-        source_path = Path(selected_resource["source"])
-        with source_path.open("r", encoding="utf-8") as config_file:
-            evc_config = json.load(config_file)
-
-        controllers = evc_config.get("controllers")
-        if not isinstance(controllers, list):
-            raise ValueError(
-                f"EVC-SUMO configuration {source_path} must contain a "
-                "controllers list"
-            )
-
-        rendered = False
-        for controller_index, controller in enumerate(controllers, 1):
-            route = controller.get("spat_forwarding")
-            if route is None:
-                continue
+        resolved_routes = []
+        listeners = set()
+        for route_index, route in enumerate(routes, 1):
             if not isinstance(route, dict):
                 raise ValueError(
-                    f"Controller {controller_index} spat_forwarding must be a mapping"
+                    f"EVC_SPAT_FORWARDING route {route_index} must be a mapping"
                 )
-
             infrastructure = route.get("destination_infrastructure")
-            destination_host = route.get("destination_host")
-            if infrastructure is None:
-                if not isinstance(destination_host, str) or not destination_host:
-                    raise ValueError(
-                        f"Controller {controller_index} spat_forwarding must define "
-                        "destination_infrastructure or destination_host"
-                    )
-                continue
             if not isinstance(infrastructure, str) or not infrastructure:
                 raise ValueError(
-                    f"Controller {controller_index} destination_infrastructure "
-                    "must be a non-empty string"
-                )
-            if destination_host is not None:
-                raise ValueError(
-                    f"Controller {controller_index} cannot define both "
-                    "destination_infrastructure and destination_host"
+                    f"EVC_SPAT_FORWARDING route {route_index} must define a "
+                    "destination_infrastructure"
                 )
             try:
-                route["destination_host"] = street_hosts[infrastructure]
+                destination_host = street_hosts[infrastructure]
             except KeyError as exc:
                 available = ", ".join(street_hosts) or "none"
                 raise ValueError(
-                    f"Controller {controller_index} references unknown Street "
-                    f"PROJECT_NAME {infrastructure!r}; available: {available}"
+                    f"EVC_SPAT_FORWARDING route {route_index} references "
+                    f"unknown Street PROJECT_NAME {infrastructure!r}; "
+                    f"available: {available}"
                 ) from exc
-            rendered = True
 
-        if not rendered:
-            return
+            listen_ip = route.get("listen_ip", "127.0.0.1")
+            listen_port = route.get("listen_port")
+            destination_port = route.get("destination_port", 6053)
+            if not isinstance(listen_ip, str) or not listen_ip:
+                raise ValueError(
+                    f"EVC_SPAT_FORWARDING route {route_index} has an invalid "
+                    "listen_ip"
+                )
+            for field_name, port in (
+                ("listen_port", listen_port),
+                ("destination_port", destination_port),
+            ):
+                if (
+                    not isinstance(port, int)
+                    or isinstance(port, bool)
+                    or not 1 <= port <= 65535
+                ):
+                    raise ValueError(
+                        f"EVC_SPAT_FORWARDING route {route_index} has an "
+                        f"invalid {field_name}"
+                    )
 
-        output_directory = self.tmp_dir / "resolved-evc-sumo"
-        output_directory.mkdir(parents=True, exist_ok=True)
-        output_path = output_directory / config_filename
-        output_path.write_text(
-            json.dumps(evc_config, indent=2) + "\n",
-            encoding="utf-8",
+            listener = (listen_ip, listen_port)
+            if listener in listeners:
+                raise ValueError(
+                    "Duplicate EVC SPaT forwarding listener: "
+                    f"{listen_ip}:{listen_port}"
+                )
+            listeners.add(listener)
+            resolved_routes.append(
+                {
+                    "listen_ip": listen_ip,
+                    "listen_port": listen_port,
+                    "destination_host": destination_host,
+                    "destination_port": destination_port,
+                }
+            )
+
+        env_settings["settings"]["EVC_SPAT_FORWARDING_JSON"] = json.dumps(
+            resolved_routes, separators=(",", ":")
         )
-        selected_resource["source"] = str(output_path)
-        print(f"Resolved EVC SPaT destinations in {output_path}")
+        return env_settings
 
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
@@ -750,7 +720,7 @@ class ScenarioGenerator:
             services["econolite-virtual-controller"] = {
                 "networks": {
                     "streets_shared": {"aliases": ["evc"]}
-                }
+                },
             }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"
@@ -1170,7 +1140,6 @@ class ScenarioGenerator:
         es = self.config['env_settings']
 
         self._prepare_sensor_resources()
-        self._resolve_evc_spat_destinations()
 
         cdasim_settings = es['cdasim'].get('settings', {})
         if 'NS3_FEDERATE_IMAGE' in cdasim_settings:

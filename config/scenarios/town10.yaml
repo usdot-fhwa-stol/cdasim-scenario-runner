@@ -14,7 +14,6 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
@@ -22,15 +21,21 @@ test_cases:
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          EVC_IMAGE: usdotfhwastol/econolite-virtual-controller:save
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
@@ -100,7 +105,6 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
@@ -112,11 +116,16 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -213,7 +222,6 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
@@ -225,11 +233,16 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -350,7 +363,6 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
@@ -362,12 +374,21 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468_719.json
-              - tl_468.cfg
-              - tl_719.cfg
+              - intersection_1_tl_468_spat_16053.cfg
+              - intersection_2_tl_719_spat_16054.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -512,7 +533,6 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-evc.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
@@ -524,13 +544,26 @@ test_cases:
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719_189.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16055
+              destination_infrastructure: street_3
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468_719_189.json
-              - tl_468.cfg
-              - tl_719.cfg
-              - tl_189.cfg
+              - intersection_1_tl_468_spat_16053.cfg
+              - intersection_2_tl_719_spat_16054.cfg
+              - intersection_3_tl_189_spat_16055.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:

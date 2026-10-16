@@ -2,46 +2,18 @@
   "controllers": [
     {
       "controllerId": 3,
-      "controllerCfgPath": "/home/carma/src/resources/tl_468.cfg",
+      "controllerCfgPath": "/home/carma/src/resources/intersection_1_tl_468_spat_16053.cfg",
       "moe_dir": null,
       "start_time": 0,
       "bind_ip": null,
       "web_port": 0,
       "snmp_port": 5055,
       "harness_port": 0,
-      "spat_forwarding": {
-        "listen_ip": "127.0.0.1",
-        "listen_port": 16053,
-        "destination_infrastructure": "street_1",
-        "destination_port": 6053
-      },
       "sumoTlId": 468,
       "enableWebPanel": true,
-      "evcPhases": [
-        {
-          "evcPhaseId": 2,
-          "sumoTlStateIndex": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        {
-          "evcPhaseId": 6,
-          "sumoTlStateIndex": [
-            4,
-            5
-          ]
-        },
-        {
-          "evcPhaseId": 4,
-          "sumoTlStateIndex": [
-            6,
-            7
-          ]
-        }
-      ]
+      "evcPhases": [{"evcPhaseId": 2, "sumoTlStateIndex":[0,1,2,3]},
+                    {"evcPhaseId": 6, "sumoTlStateIndex":[4,5]},
+                    {"evcPhaseId": 4, "sumoTlStateIndex":[6,7]}]
     }
   ]
 }
