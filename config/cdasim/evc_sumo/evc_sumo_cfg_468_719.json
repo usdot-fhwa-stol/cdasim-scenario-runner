@@ -2,7 +2,7 @@
   "controllers": [
     {
       "controllerId": 3,
-      "controllerCfgPath": "/home/carma/src/resources/tl_468.cfg",
+      "controllerCfgPath": "/home/carma/src/resources/intersection_1_tl_468_spat_16053.cfg",
       "moe_dir": null,
       "start_time": 0,
       "bind_ip": null,
@@ -11,71 +11,24 @@
       "harness_port": 0,
       "sumoTlId": 468,
       "enableWebPanel": true,
-      "evcPhases": [
-        {
-          "evcPhaseId": 2,
-          "sumoTlStateIndex": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        {
-          "evcPhaseId": 6,
-          "sumoTlStateIndex": [
-            4,
-            5
-          ]
-        },
-        {
-          "evcPhaseId": 4,
-          "sumoTlStateIndex": [
-            6,
-            7
-          ]
-        }
-      ]
+      "evcPhases": [{"evcPhaseId": 2, "sumoTlStateIndex":[0,1,2,3]},
+                    {"evcPhaseId": 6, "sumoTlStateIndex":[4,5]},
+                    {"evcPhaseId": 4, "sumoTlStateIndex":[6,7]}]
     },
     {
       "controllerId": 2,
-      "controllerCfgPath": "/home/carma/src/resources/tl_719.cfg",
+      "controllerCfgPath": "/home/carma/src/resources/intersection_2_tl_719_spat_16054.cfg",
       "moe_dir": null,
       "start_time": 0,
       "bind_ip": null,
       "web_port": 0,
-      "snmp_port": 5055,
+      "snmp_port": 5056,
       "harness_port": 0,
       "sumoTlId": 719,
       "enableWebPanel": true,
-      "evcPhases": [
-        {
-          "evcPhaseId": 2,
-          "sumoTlStateIndex": [
-            0,
-            1,
-            2,
-            3
-          ]
-        },
-        {
-          "evcPhaseId": 6,
-          "sumoTlStateIndex": [
-            4,
-            5,
-            6,
-            7
-          ]
-        },
-        {
-          "evcPhaseId": 4,
-          "sumoTlStateIndex": [
-            8,
-            9,
-            10
-          ]
-        }
-      ]
+      "evcPhases": [{"evcPhaseId": 2, "sumoTlStateIndex":[0,1,2,3]},
+                    {"evcPhaseId": 6, "sumoTlStateIndex":[4,5,6,7]},
+                    {"evcPhaseId": 4, "sumoTlStateIndex":[8,9,10]}]
     }
   ]
 }

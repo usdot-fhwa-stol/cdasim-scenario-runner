@@ -139,12 +139,14 @@ class ScenarioGenerator:
         return str(env_path)
 
     def _cdasim_env_settings(self, cdasim: Dict[str, Any]) -> Dict[str, Any]:
-        """Add absolute staged-resource paths to the CDASim environment.
+        """Add generated deployment values to the CDASim environment.
 
         Relative bind sources in a Compose OCI artifact resolve against the
         artifact cache rather than Scenario Runner's temporary directory. The
         Compose files and scenario-specific overrides consume these variables
-        when mounting resources staged under ``tmp/``.
+        when mounting resources staged under ``tmp/``. EVC SPaT destinations
+        are resolved here as deployment environment rather than by modifying
+        the EVC-SUMO-owned configuration file.
         """
 
         env_settings = {
@@ -164,6 +166,92 @@ class ScenarioGenerator:
             env_settings["settings"][
                 f"{resource_name}_RESOURCE_PATH"
             ] = str(Path(resource["target"]).resolve())
+        routes = env_settings["settings"].pop("EVC_SPAT_FORWARDING", None)
+        if routes is None:
+            return env_settings
+        if not isinstance(routes, list):
+            raise ValueError("EVC_SPAT_FORWARDING must be a list")
+
+        street_hosts: Dict[str, str] = {}
+        for street in self.config.get("env_settings", {}).get("streets", []):
+            project_name = street.get("PROJECT_NAME")
+            if not isinstance(project_name, str) or not project_name:
+                raise ValueError("Every Street instance must have a PROJECT_NAME")
+            if project_name in street_hosts:
+                raise ValueError(
+                    f"Street PROJECT_NAME {project_name!r} is not unique"
+                )
+            destination_host = street.get("settings", {}).get("V2XHUB_IP")
+            if not isinstance(destination_host, str) or not destination_host:
+                raise ValueError(
+                    f"Street {project_name!r} has no V2XHUB_IP allocation"
+                )
+            street_hosts[project_name] = destination_host
+
+        resolved_routes = []
+        listeners = set()
+        for route_index, route in enumerate(routes, 1):
+            if not isinstance(route, dict):
+                raise ValueError(
+                    f"EVC_SPAT_FORWARDING route {route_index} must be a mapping"
+                )
+            infrastructure = route.get("destination_infrastructure")
+            if not isinstance(infrastructure, str) or not infrastructure:
+                raise ValueError(
+                    f"EVC_SPAT_FORWARDING route {route_index} must define a "
+                    "destination_infrastructure"
+                )
+            try:
+                destination_host = street_hosts[infrastructure]
+            except KeyError as exc:
+                available = ", ".join(street_hosts) or "none"
+                raise ValueError(
+                    f"EVC_SPAT_FORWARDING route {route_index} references "
+                    f"unknown Street PROJECT_NAME {infrastructure!r}; "
+                    f"available: {available}"
+                ) from exc
+
+            listen_ip = route.get("listen_ip", "127.0.0.1")
+            listen_port = route.get("listen_port")
+            destination_port = route.get("destination_port", 6053)
+            if not isinstance(listen_ip, str) or not listen_ip:
+                raise ValueError(
+                    f"EVC_SPAT_FORWARDING route {route_index} has an invalid "
+                    "listen_ip"
+                )
+            for field_name, port in (
+                ("listen_port", listen_port),
+                ("destination_port", destination_port),
+            ):
+                if (
+                    not isinstance(port, int)
+                    or isinstance(port, bool)
+                    or not 1 <= port <= 65535
+                ):
+                    raise ValueError(
+                        f"EVC_SPAT_FORWARDING route {route_index} has an "
+                        f"invalid {field_name}"
+                    )
+
+            listener = (listen_ip, listen_port)
+            if listener in listeners:
+                raise ValueError(
+                    "Duplicate EVC SPaT forwarding listener: "
+                    f"{listen_ip}:{listen_port}"
+                )
+            listeners.add(listener)
+            resolved_routes.append(
+                {
+                    "listen_ip": listen_ip,
+                    "listen_port": listen_port,
+                    "destination_host": destination_host,
+                    "destination_port": destination_port,
+                }
+            )
+
+        env_settings["settings"]["EVC_SPAT_FORWARDING_JSON"] = json.dumps(
+            resolved_routes, separators=(",", ":")
+        )
         return env_settings
 
     def _generate_cdasim_runtime_with_ns3_image(
@@ -590,7 +678,7 @@ class ScenarioGenerator:
             services["econolite-virtual-controller"] = {
                 "networks": {
                     "streets_shared": {"aliases": ["evc"]}
-                }
+                },
             }
 
         override_path = self.tmp_dir / "cdasim-private-networks.yml"

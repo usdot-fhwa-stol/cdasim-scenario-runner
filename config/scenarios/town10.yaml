@@ -14,24 +14,28 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
-          - ../compose/cdasim-town10-evc-tl468.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          EVC_IMAGE: codex/econolite-virtual-controller:evc-forwarding
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
@@ -47,7 +51,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -100,24 +104,27 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
-          - ../compose/cdasim-town10-evc-tl468.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -134,7 +141,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -158,7 +165,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -213,24 +220,27 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
-          - ../compose/cdasim-town10-evc-tl468.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468.json
-              - tl_468.cfg
+              - intersection_1_tl_468_spat_16053.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -247,7 +257,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -271,7 +281,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -295,7 +305,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -350,26 +360,32 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
-          - ../compose/cdasim-town10-evc-tl468.override.yml
-          - ../compose/cdasim-town10-evc-tl719.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468_719.json
-              - tl_468.cfg
-              - tl_719.cfg
+              - intersection_1_tl_468_spat_16053.cfg
+              - intersection_2_tl_719_spat_16054.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -386,7 +402,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -410,7 +426,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -434,7 +450,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -513,28 +529,37 @@ test_cases:
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
-          - ../compose/cdasim-town10-evc.override.yml
-          - ../compose/cdasim-town10-evc-tl468.override.yml
-          - ../compose/cdasim-town10-evc-tl719.override.yml
-          - ../compose/cdasim-town10-evc-tl189.override.yml
           - ../compose/cdasim-town10-sumo.override.yml
         settings:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-dsrc
+          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719_189.json
+          EVC_SPAT_FORWARDING:
+            - listen_ip: 127.0.0.1
+              listen_port: 16053
+              destination_infrastructure: street_1
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16054
+              destination_infrastructure: street_2
+              destination_port: 6053
+            - listen_ip: 127.0.0.1
+              listen_port: 16055
+              destination_infrastructure: street_3
+              destination_port: 6053
           CDASIM_RESOURCES:
             pyeos_db: .pyeos.db
             evc_sumo:
               - evc_sumo_cfg_468_719_189.json
-              - tl_468.cfg
-              - tl_719.cfg
-              - tl_189.cfg
+              - intersection_1_tl_468_spat_16053.cfg
+              - intersection_2_tl_719_spat_16054.cfg
+              - intersection_3_tl_189_spat_16055.cfg
             sumocfg: Town10_client_2.sumocfg
 
       vehicles:
@@ -551,7 +576,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -575,7 +600,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:
@@ -599,7 +624,7 @@ test_cases:
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
             CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
             V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
-            VEHICLE_REGISTRATION_IMAGE: usdotfhwastoldev/carma-ns3-adapter:develop
+            VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
             SPAWN_POINT:

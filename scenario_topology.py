@@ -271,7 +271,7 @@ def _apply_street_topology(
                 "INFRASTRUCTURE_HOST": allocation[
                     "STREET_INFRASTRUCTURE_HOST"
                 ],
-                "V2XHUB_HOST": allocation["V2XHUB_SIM_HOST"],
+                "V2XHUB_HOST": allocation["V2XHUB_IP"],
                 "INFRASTRUCTURE_IP": allocation[
                     "STREET_INFRASTRUCTURE_HOST"
                 ],

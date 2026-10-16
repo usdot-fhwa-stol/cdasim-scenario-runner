@@ -3,7 +3,7 @@ services:
     networks:
       streets_shared:
         aliases:
-          - "${V2XHUB_SIM_HOST:?V2XHUB_SIM_HOST is required}"
+          - "${V2XHUB_IP:?V2XHUB_IP is required}"
 
 networks:
   streets_shared:

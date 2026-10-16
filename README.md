@@ -105,8 +105,6 @@ EVC is an optional CDASim service. Enable its Compose profile under the CDASim
 deployment rather than configuring it on individual Street instances:
 
 ```yaml
-COMPOSE_OVERRIDES:
-  - ../compose/cdasim-town10-evc.override.yml
 settings:
   COMPOSE_PROFILES:
     - evc
@@ -114,15 +112,57 @@ settings:
     pyeos_db: .pyeos.db
     evc_sumo:
       - evc_sumo_cfg_468_719_189.json
-      - tl_189.cfg
+      - intersection_1_tl_468_spat_16053.cfg
+      - intersection_2_tl_719_spat_16054.cfg
+      - intersection_3_tl_189_spat_16055.cfg
 ```
 
 Docker Compose activates the `evc` profile from `COMPOSE_PROFILES`, and the
 controller attaches to the shared Street network with the `evc` alias. Street
 entries do not control whether EVC starts. When EVC is not needed, omit the
-`evc` profile, its Compose override, and its entries under `CDASIM_RESOURCES`;
+`evc` profile and its entries under `CDASIM_RESOURCES`;
 Scenario Runner only resolves, validates, and stages resources declared by the
 test case.
+
+Define EVC SPaT forwarding routes in the CDASim deployment settings. Each
+route identifies its destination with the stable Street `PROJECT_NAME`, so
+scenario authors do not need to know generated Docker DNS names:
+
+```yaml
+settings:
+  EVC_SPAT_FORWARDING:
+    - listen_ip: 127.0.0.1
+      listen_port: 16054
+      destination_infrastructure: street_2
+      destination_port: 6053
+```
+
+Scenario Runner validates each logical reference against the scenario's Street
+entries, resolves it to that instance's generated `V2XHUB_IP`, and serializes
+the resolved routes into `EVC_SPAT_FORWARDING_JSON` for the EVC container. It
+does not modify `evc_sumo_cfg.json`; that file remains owned by EVC-SUMO and
+contains only controller-specific configuration.
+
+| Controller | EOS SPaT destination | Logical Street destination |
+| --- | --- | --- |
+| `intersection_1_tl_468_spat_16053.cfg` | `127.0.0.1:16053` | `street_1:6053` |
+| `intersection_2_tl_719_spat_16054.cfg` | `127.0.0.1:16054` | `street_2:6053` |
+| `intersection_3_tl_189_spat_16055.cfg` | `127.0.0.1:16055` | `street_3:6053` |
+
+The base CDASim Compose service mounts the complete staged `evc_sumo`
+resource directory over the EVC resource directory. Adding another controller
+does not require another Compose service: add its CFG to `CDASIM_RESOURCES`,
+add its controller entry to the selected EVC-SUMO JSON, add an
+`EVC_SPAT_FORWARDING` route to the scenario, and export the EOS CFG with the
+matching unique localhost destination. Reordering `streets` does not change
+the route because Scenario Runner resolves the destination by `PROJECT_NAME`.
+
+Set `EVC_IMAGE` in the CDASim settings when testing a newly built `evc-sumo`
+image. It defaults to `usdotfhwastol/econolite-virtual-controller:save`.
+
+The checked-in EOS CFG files must be exported by EOS with these localhost
+destinations. Do not patch the binary CFG files directly; EOS validates their
+internal database representation and may otherwise fall back to defaults.
 
 For a config-image deployment, `CONFIG_OVERRIDES` maps target paths relative
 to `CONFIG_COMPOSE_PATH`'s directory to source paths under `config`. Scenario
@@ -233,7 +273,10 @@ project_root/
 ├── config/
 |   ├── cdasim/
 │   │   ├── evc_sumo/
-|   |   |       └── evc_sumo_cfg_468_719_189.json
+|   |   |       ├── evc_sumo_cfg_468_719_189.json
+|   |   |       ├── intersection_1_tl_468_spat_16053.cfg
+|   |   |       ├── intersection_2_tl_719_spat_16054.cfg
+|   |   |       └── intersection_3_tl_189_spat_16055.cfg
 │   │   ├── pyeos_db/
 |   |   |       └── .pyeos.db
 |   ├── infrastructure/

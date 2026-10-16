@@ -130,7 +130,7 @@
       },
       "simulation_endpoints": {
         "v2xhub": {
-          "env": "V2XHUB_SIM_HOST",
+          "env": "V2XHUB_IP",
           "alias_template": "v2xhub-{index}-sim"
         }
       }
