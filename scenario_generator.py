@@ -31,6 +31,13 @@ CDASIM_RUNTIME_TEMPLATE_PATH = (
     / "cdasim"
     / "runtime.template.json"
 )
+NS3_FEDERATE_CONFIG_DIRECTORY = (
+    Path(__file__).resolve().parent / "config" / "cdasim" / "ns3"
+)
+NS3_FEDERATE_CONFIG_FILES = {
+    "5g-nr": "ns3_federate_config_5g_nr.xml",
+    "dsrc": "ns3_federate_config_dsrc.xml",
+}
 STREET_NETWORK_OVERRIDE_PATH = (
     Path(__file__).resolve().parent
     / "config"
@@ -257,7 +264,7 @@ class ScenarioGenerator:
     def _generate_cdasim_runtime_with_ns3_image(
         self, cdasim: Dict[str, Any]
     ) -> str:
-        """Create a runtime.json with the configured NS-3 federate image.
+        """Configure the matching NS-3 image and radio configuration.
 
         Args:
             cdasim: The CDASim deployment entry from ``env_settings``. Its
@@ -266,14 +273,17 @@ class ScenarioGenerator:
         Returns:
             The absolute path to ``tmp/cdasim-runtime.json``. The same path is
             added to the CDASim settings as ``CDASIM_RUNTIME_FILE`` for the
-            runtime Compose override.
+            runtime Compose override. ``NS3_FEDERATE_CONFIG_FILE`` is also set
+            to the absolute path of the DSRC or 5G NR XML selected from the
+            image tag.
 
         Raises:
             FileNotFoundError: If the repository runtime template is missing.
             ValueError: If ``settings`` is not a mapping,
-                ``NS3_FEDERATE_IMAGE`` is empty, the template does not contain
-                a ``federates`` list, or it does not contain exactly one
-                federate whose ``id`` is ``ns3``.
+                ``NS3_FEDERATE_IMAGE`` is empty or has an unsupported tag, the
+                selected XML is missing, the template does not contain a
+                ``federates`` list, or it does not contain exactly one federate
+                whose ``id`` is ``ns3``.
             json.JSONDecodeError: If the runtime template is not valid JSON.
 
         Example:
@@ -289,6 +299,33 @@ class ScenarioGenerator:
         ns3_image = settings.get("NS3_FEDERATE_IMAGE")
         if not isinstance(ns3_image, str) or not ns3_image.strip():
             raise ValueError("NS3_FEDERATE_IMAGE must be a non-empty string")
+        ns3_image = ns3_image.strip()
+
+        image_name = ns3_image.rsplit("/", 1)[-1].split("@", 1)[0]
+        image_tag = (
+            image_name.rsplit(":", 1)[1].lower()
+            if ":" in image_name
+            else ""
+        )
+        if image_tag == "5g-nr" or image_tag.endswith("-5g-nr"):
+            radio_technology = "5g-nr"
+        elif image_tag == "dsrc" or image_tag.endswith("-dsrc"):
+            radio_technology = "dsrc"
+        else:
+            raise ValueError(
+                "Cannot select an NS-3 radio configuration from image "
+                f"{ns3_image!r}; use a tag ending in '-5g-nr' or '-dsrc'"
+            )
+
+        ns3_config_path = (
+            NS3_FEDERATE_CONFIG_DIRECTORY
+            / NS3_FEDERATE_CONFIG_FILES[radio_technology]
+        ).resolve()
+        if not ns3_config_path.is_file():
+            raise FileNotFoundError(
+                f"NS-3 {radio_technology} configuration not found: "
+                f"{ns3_config_path}"
+            )
 
         with CDASIM_RUNTIME_TEMPLATE_PATH.open(
             "r", encoding="utf-8"
@@ -309,14 +346,19 @@ class ScenarioGenerator:
                 "CDASim runtime template must contain exactly one ns3 federate"
             )
 
-        ns3_federates[0]["dockerImage"] = ns3_image.strip()
+        ns3_federates[0]["dockerImage"] = ns3_image
         runtime_path = self.tmp_dir / "cdasim-runtime.json"
         runtime_path.write_text(
             json.dumps(runtime_config, indent=4) + "\n",
             encoding="utf-8",
         )
         settings["CDASIM_RUNTIME_FILE"] = str(runtime_path)
+        settings["NS3_FEDERATE_CONFIG_FILE"] = str(ns3_config_path)
         print(f"Generated {runtime_path}")
+        print(
+            f"Selected {radio_technology} NS-3 configuration: "
+            f"{ns3_config_path}"
+        )
         return str(runtime_path)
 
     # --------------------------------------------------------------------- #

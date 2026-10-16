@@ -21,7 +21,7 @@ test_cases:
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
           CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
-          EVC_IMAGE: codex/econolite-virtual-controller:evc-forwarding
+          EVC_IMAGE: usdotfhwastol/econolite-virtual-controller:save
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
@@ -87,6 +87,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -202,6 +203,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -342,6 +344,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -511,6 +514,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -709,6 +713,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
+      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs

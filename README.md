@@ -96,10 +96,43 @@ configure those entries:
 | **`COMPOSE_FILE`** | A repository-local base Compose file or a docker compose OC artifact used instead of `CONFIG_IMAGE_FULL`. |
 | **`settings`** | Deployment-specific runtime parameters such as route, map, sensors, and spawn positions. |
 
+The required `data_output.data_analyzer_image` field selects the published
+image used after collecting that test case's data:
+
+```yaml
+data_output:
+  data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+```
+
+Release configurations can pin the corresponding
+`usdotfhwastol/cdasim-data-analysis` release tag. The image is built and
+published by `carma-analytics-fotda`, which owns both the CDASim and CARMA
+Platform analysis scripts.
+
 Under the CDASim deployment's `settings`, `CDASIM_RESOURCES` maps each
 directory under `config/cdasim` to either one file name or a list of file
 names. Scenario Runner stages every listed file into the matching directory
 under `tmp` before Compose starts.
+
+When `NS3_FEDERATE_IMAGE` is configured, its tag must end in `-5g-nr` or
+`-dsrc`. Scenario Runner automatically selects the matching XML from
+`config/cdasim/ns3` and exposes its absolute path as
+`NS3_FEDERATE_CONFIG_FILE`. Add `cdasim-ns3-runtime.override.yml` to
+`COMPOSE_OVERRIDES` to mount both the generated runtime file and the selected
+radio configuration into the active `MOSAIC_SCENARIO`. For example:
+
+```yaml
+COMPOSE_OVERRIDES:
+  - ../compose/cdasim-ns3-runtime.override.yml
+settings:
+  MOSAIC_SCENARIO: Town10
+  NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
+```
+
+Changing the image suffix to `develop-dsrc` selects
+`ns3_federate_config_dsrc.xml` instead. An unqualified image tag is rejected
+because Scenario Runner cannot safely determine the matching radio
+configuration.
 
 EVC is an optional CDASim service. Enable its Compose profile under the CDASim
 deployment rather than configuring it on individual Street instances:
@@ -279,6 +312,9 @@ project_root/
 |   |   |       └── intersection_3_tl_189_spat_16055.cfg
 │   │   ├── pyeos_db/
 |   |   |       └── .pyeos.db
+│   │   ├── ns3/
+|   |   |       ├── ns3_federate_config_5g_nr.xml
+|   |   |       └── ns3_federate_config_dsrc.xml
 |   ├── infrastructure/
 │   │   ├── v2xhub_db_init/
 |   |   |       └── default.localhost.sql
