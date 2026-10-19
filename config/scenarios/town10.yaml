@@ -191,9 +191,13 @@ test_cases:
             V2XHUB_VERSION: release-aventador
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -205,6 +209,7 @@ test_cases:
               y: -127.1
               z: 0.0
               yaw: 180.0
+
 
     data_output:
       data_analyzer_image: usdotfhwastolcandidate/cdasim-data-analysis:aventador
@@ -332,9 +337,13 @@ test_cases:
             V2XHUB_VERSION: release-aventador
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -478,9 +487,13 @@ test_cases:
             V2XHUB_VERSION: release-aventador
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -492,6 +505,7 @@ test_cases:
               y: -127.1
               z: 0.0
               yaw: 180.0
+
 
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:release-aventador
@@ -653,9 +667,13 @@ test_cases:
             V2XHUB_VERSION: release-aventador
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -667,6 +685,7 @@ test_cases:
               y: -127.1
               z: 0.0
               yaw: 180.0
+
 
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:release-aventador
