@@ -66,9 +66,9 @@ test_cases:
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:release-aventador
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastolcandidate
+            STOL_TAG: aventador
+            V2XHUB_VERSION: release-aventador
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
             INFRASTRUCTURE_RESOURCES:
