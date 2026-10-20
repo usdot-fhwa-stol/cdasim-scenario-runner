@@ -20,7 +20,7 @@ test_cases:
             - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastolcandidate/ns3-federate:aventador-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CDASIM_IMAGE: usdotfhwastolcandidate/cdasim:aventador
           EVC_IMAGE: usdotfhwastol/econolite-virtual-controller:save
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
@@ -101,7 +101,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastolcandidate/cdasim-application:aventador
+        COMPOSE_FILE: oci://usdotfhwastolcandidate/cdasim-application:release-aventador
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -111,7 +111,7 @@ test_cases:
             - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastolcandidate/ns3-federate:aventador-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CDASIM_IMAGE: usdotfhwastolcandidate/cdasim:aventador
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastolcandidate/xml-rpc-server:aventador
@@ -228,7 +228,7 @@ test_cases:
             - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastolcandidate/ns3-federate:aventador-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CDASIM_IMAGE: usdotfhwastolcandidate/cdasim:aventador
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastolcandidate/xml-rpc-server:aventador
@@ -369,7 +369,7 @@ test_cases:
             - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastolcandidate/ns3-federate:aventador-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CDASIM_IMAGE: usdotfhwastolcandidate/cdasim:aventador
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastolcandidate/xml-rpc-server:aventador
@@ -539,7 +539,7 @@ test_cases:
             - evc
           MOSAIC_SCENARIO: Town10
           NS3_FEDERATE_IMAGE: usdotfhwastolcandidate/ns3-federate:aventador-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          CDASIM_IMAGE: usdotfhwastolcandidate/cdasim:aventador
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
           XML_RPC_SERVER_IMAGE: usdotfhwastolcandidate/xml-rpc-server:aventador
