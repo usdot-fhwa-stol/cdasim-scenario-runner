@@ -193,7 +193,7 @@ docker compose \
 {% for compose_file in c.compose_files %}               -f "{{ compose_file }}" \
 {% endfor %}               --env-file "{{ c.env_file }}" \
                -p "{{ c.PROJECT_NAME }}" \
-               pull --policy missing
+               pull --policy always --ignore-pull-failures
 {% endfor %}
 
 {% for network in networks %}
