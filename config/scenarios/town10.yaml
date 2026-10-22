@@ -99,7 +99,7 @@ test_cases:
         rosbags: /opt/carma/logs
 
   - label: test_case_2
-    runtime_seconds: 300
+    runtime_seconds: 400
     MAP: Town10
 
     env_settings:
@@ -221,7 +221,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_3
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
@@ -366,7 +366,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_4
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
@@ -545,7 +545,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_5
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
