@@ -418,6 +418,13 @@ class ScenarioRunner:
         collect = case.get("data_output", {}).get("collect", {})
         directories.update(Path(path) for path in collect.values() if path)
 
+        v2xhub_log_root = collect.get("v2xhub_logs")
+        if v2xhub_log_root:
+            # JSONMessageLoggerPlugin writes to this subdirectory. Prepare it
+            # before V2XHub starts so the container does not create it with
+            # permissions that prevent Scenario Runner from clearing logs.
+            directories.add(Path(v2xhub_log_root) / "json")
+
         rosbag_root = collect.get("rosbags")
         if rosbag_root:
             for vehicle in case.get("env_settings", {}).get("vehicles", []):
