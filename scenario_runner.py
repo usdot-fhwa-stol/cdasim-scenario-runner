@@ -290,7 +290,7 @@ class ScenarioRunner:
                                 )
                 target_folder_name = resource_name + "_" + infra_name
                 target = self.tmp_dir / target_folder_name
-                if resource_name == "sensor":
+                if resource_name == "sensor" or resource_name == "v2xhub_save_state" or resource_name == "j2735_map" :
                     target = V2XHUB_DOWNLOAD_DIRECTORY
                 resource = {
                     "source": str(source),
@@ -417,6 +417,13 @@ class ScenarioRunner:
 
         collect = case.get("data_output", {}).get("collect", {})
         directories.update(Path(path) for path in collect.values() if path)
+
+        v2xhub_log_root = collect.get("v2xhub_logs")
+        if v2xhub_log_root:
+            # JSONMessageLoggerPlugin writes to this subdirectory. Prepare it
+            # before V2XHub starts so the container does not create it with
+            # permissions that prevent Scenario Runner from clearing logs.
+            directories.add(Path(v2xhub_log_root) / "json")
 
         rosbag_root = collect.get("rosbags")
         if rosbag_root:

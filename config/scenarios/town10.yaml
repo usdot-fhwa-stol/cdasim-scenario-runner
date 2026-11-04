@@ -10,7 +10,7 @@ test_cases:
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        COMPOSE_FILE: oci://usdotfhwastol/cdasim-application:carma-system-4.16.0
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -19,12 +19,12 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          NS3_FEDERATE_IMAGE: usdotfhwastol/ns3-federate:carma-system-4.16.0-5g-nr
+          CDASIM_IMAGE: usdotfhwastol/cdasim:carma-system-4.16.0
           EVC_IMAGE: usdotfhwastol/econolite-virtual-controller:save
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
-          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          XML_RPC_SERVER_IMAGE: usdotfhwastol/xml-rpc-server:carma-system-4.16.0
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
           EVC_SPAT_FORWARDING:
             - listen_ip: 127.0.0.1
@@ -40,7 +40,7 @@ test_cases:
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -49,8 +49,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -63,17 +63,21 @@ test_cases:
               yaw: 180.0
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -87,7 +91,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
-      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+      data_analyzer_image: usdotfhwastol/cdasim-data-analysis:carma-system-4.16.0
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -95,13 +99,13 @@ test_cases:
         rosbags: /opt/carma/logs
 
   - label: test_case_2
-    runtime_seconds: 300
+    runtime_seconds: 400
     MAP: Town10
 
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        COMPOSE_FILE: oci://usdotfhwastol/cdasim-application:carma-system-4.16.0
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -110,11 +114,11 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          NS3_FEDERATE_IMAGE: usdotfhwastol/ns3-federate:carma-system-4.16.0-5g-nr
+          CDASIM_IMAGE: usdotfhwastol/cdasim:carma-system-4.16.0
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
-          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          XML_RPC_SERVER_IMAGE: usdotfhwastol/xml-rpc-server:carma-system-4.16.0
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
           EVC_SPAT_FORWARDING:
             - listen_ip: 127.0.0.1
@@ -131,7 +135,7 @@ test_cases:
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -140,8 +144,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -155,7 +159,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -164,8 +168,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -179,17 +183,21 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -202,8 +210,9 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
     data_output:
-      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+      data_analyzer_image: usdotfhwastol/cdasim-data-analysis:carma-system-4.16.0
       output_directory: /opt/carma-simulation/tests/output
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -212,13 +221,13 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_3
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        COMPOSE_FILE: oci://usdotfhwastol/cdasim-application:carma-system-4.16.0
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -227,11 +236,11 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          NS3_FEDERATE_IMAGE: usdotfhwastol/ns3-federate:carma-system-4.16.0-5g-nr
+          CDASIM_IMAGE: usdotfhwastol/cdasim:carma-system-4.16.0
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
-          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          XML_RPC_SERVER_IMAGE: usdotfhwastol/xml-rpc-server:carma-system-4.16.0
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468.json
           EVC_SPAT_FORWARDING:
             - listen_ip: 127.0.0.1
@@ -248,7 +257,7 @@ test_cases:
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -257,8 +266,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -272,7 +281,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -281,8 +290,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -296,7 +305,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -305,8 +314,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
@@ -320,17 +329,21 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -344,7 +357,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
-      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+      data_analyzer_image: usdotfhwastol/cdasim-data-analysis:carma-system-4.16.0
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -353,13 +366,13 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_4
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        COMPOSE_FILE: oci://usdotfhwastol/cdasim-application:carma-system-4.16.0
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -368,11 +381,11 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          NS3_FEDERATE_IMAGE: usdotfhwastol/ns3-federate:carma-system-4.16.0-5g-nr
+          CDASIM_IMAGE: usdotfhwastol/cdasim:carma-system-4.16.0
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
-          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          XML_RPC_SERVER_IMAGE: usdotfhwastol/xml-rpc-server:carma-system-4.16.0
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719.json
           EVC_SPAT_FORWARDING:
             - listen_ip: 127.0.0.1
@@ -394,7 +407,7 @@ test_cases:
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -403,8 +416,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -418,7 +431,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -427,8 +440,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -442,7 +455,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -451,8 +464,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
@@ -466,17 +479,21 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -489,18 +506,23 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
         - PROJECT_NAME: street_2
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_5678
             INFRASTRUCTURE_NAME: Intersection 2
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_2.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_2.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_2.txt
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
@@ -514,7 +536,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
-      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+      data_analyzer_image: usdotfhwastol/cdasim-data-analysis:carma-system-4.16.0
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
@@ -523,13 +545,13 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_5
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
       cdasim:
         PROJECT_NAME: cdasim
-        COMPOSE_FILE: oci://usdotfhwastoldev/cdasim-application:develop
+        COMPOSE_FILE: oci://usdotfhwastol/cdasim-application:carma-system-4.16.0
         CONFIG_IMAGE_PULL_POLICY: missing
         COMPOSE_OVERRIDES:
           - ../compose/cdasim-ns3-runtime.override.yml
@@ -538,11 +560,11 @@ test_cases:
           COMPOSE_PROFILES:
             - evc
           MOSAIC_SCENARIO: Town10
-          NS3_FEDERATE_IMAGE: usdotfhwastoldev/ns3-federate:develop-5g-nr
-          CDASIM_IMAGE: usdotfhwastoldev/cdasim:develop
+          NS3_FEDERATE_IMAGE: usdotfhwastol/ns3-federate:carma-system-4.16.0-5g-nr
+          CDASIM_IMAGE: usdotfhwastol/cdasim:carma-system-4.16.0
           CARLA_RENDER_OFFSCREEN: false
           CARLA_SENSOR_LIB_IMAGE: usdotfhwastol/carla-sensor-lib:carma-system-4.13.0
-          XML_RPC_SERVER_IMAGE: usdotfhwastoldev/xml-rpc-server:develop
+          XML_RPC_SERVER_IMAGE: usdotfhwastol/xml-rpc-server:carma-system-4.16.0
           EVC_SUMO_CFG_FILE: evc_sumo_cfg_468_719_189.json
           EVC_SPAT_FORWARDING:
             - listen_ip: 127.0.0.1
@@ -569,7 +591,7 @@ test_cases:
       vehicles:
         - PROJECT_NAME: platform_vehicle_1
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -578,8 +600,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_1
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: loop_route
             START_DELAY_IN_SECONDS: 10.0
@@ -593,7 +615,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_2
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -602,8 +624,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_2
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: e2w_route
             START_DELAY_IN_SECONDS: 10.0
@@ -617,7 +639,7 @@ test_cases:
 
         - PROJECT_NAME: platform_vehicle_3
           COMPONENT: platform
-          CONFIG_IMAGE_FULL: usdotfhwastoldev/carma-config:develop-basic-simulation-platform-vehicle
+          CONFIG_IMAGE_FULL: usdotfhwastol/carma-config:carma-system-4.16.0-basic-simulation-platform-vehicle
           CONFIG_COMPOSE_PATH: /opt/carma/vehicle/config/docker-compose.yml
           CONFIG_IMAGE_PULL_POLICY: missing
           COMPOSE_OVERRIDES: []
@@ -626,8 +648,8 @@ test_cases:
           settings:
             VEHICLE_ID: carma_3
             CARMA_PLATFORM_IMAGE: usdotfhwastol/carma-platform:carma-system-4.10.0
-            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastoldev/carma-carla-integration:develop
-            V2X_ROS_DRIVER_IMAGE: usdotfhwastoldev/v2x-ros-driver:develop
+            CARMA_CARLA_INTEGRATION_IMAGE: usdotfhwastol/carma-carla-integration:carma-system-4.16.0
+            V2X_ROS_DRIVER_IMAGE: usdotfhwastol/v2x-ros-driver:carma-system-4.16.0
             VEHICLE_REGISTRATION_IMAGE: usdotfhwastol/carma-ns3-adapter:carma-system-4.13.0
             SELECTED_ROUTE: n2s_route
             START_DELAY_IN_SECONDS: 10.0
@@ -641,17 +663,21 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -664,18 +690,23 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
         - PROJECT_NAME: street_2
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_5678
             INFRASTRUCTURE_NAME: Intersection 2
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_2.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_2.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_2.txt
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
@@ -689,17 +720,21 @@ test_cases:
               yaw: 180.0
 
         - PROJECT_NAME: street_3
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
           COMPOSE_OVERRIDES: []
           settings:
-            STOL_ORG: usdotfhwastoldev
-            STOL_TAG: develop
-            V2XHUB_VERSION: develop
+            STOL_ORG: usdotfhwastol
+            STOL_TAG: carma-system-4.16.0
+            V2XHUB_VERSION: 8.1.0
             INFRASTRUCTURE_ID: rsu_9012
             INFRASTRUCTURE_NAME: Intersection 3
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_3.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_3.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_3.txt
             SENSORS:
               sensor_id: lidar_3
               type: SemanticLidar
@@ -713,7 +748,7 @@ test_cases:
               yaw: 180.0
 
     data_output:
-      data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
+      data_analyzer_image: usdotfhwastol/cdasim-data-analysis:carma-system-4.16.0
       output_directory: /opt/carma-simulation/tests/output/
       collect:
         mosaic_logs: /opt/carma-simulation/logs
