@@ -63,7 +63,7 @@ test_cases:
               yaw: 180.0
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -183,7 +183,7 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -329,7 +329,7 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -479,7 +479,7 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -508,7 +508,7 @@ test_cases:
 
 
         - PROJECT_NAME: street_2
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -663,7 +663,7 @@ test_cases:
 
       streets:
         - PROJECT_NAME: street_1
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -692,7 +692,7 @@ test_cases:
 
 
         - PROJECT_NAME: street_2
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
@@ -720,7 +720,7 @@ test_cases:
               yaw: 180.0
 
         - PROJECT_NAME: street_3
-          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:carma-system-4.16.0
+          COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:8.1.0
           COMPOSE_OVERRIDES: []
           settings:
             STOL_ORG: usdotfhwastol
