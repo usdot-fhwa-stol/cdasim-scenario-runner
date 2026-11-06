@@ -71,9 +71,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -95,7 +99,7 @@ test_cases:
         rosbags: /opt/carma/logs
 
   - label: test_case_2
-    runtime_seconds: 300
+    runtime_seconds: 400
     MAP: Town10
 
     env_settings:
@@ -187,9 +191,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -202,6 +210,7 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
     data_output:
       data_analyzer_image: usdotfhwastoldev/cdasim-data-analysis:develop
       output_directory: /opt/carma-simulation/tests/output
@@ -212,7 +221,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_3
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
@@ -328,9 +337,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -353,7 +366,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_4
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
@@ -474,9 +487,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -489,6 +506,7 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
           COMPOSE_OVERRIDES: []
@@ -498,9 +516,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_5678
             INFRASTRUCTURE_NAME: Intersection 2
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_2.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_2.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_2.txt
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
@@ -523,7 +545,7 @@ test_cases:
         v2xhub_logs: /opt/v2xhub/logs
 
   - label: test_case_5
-    runtime_seconds: 300
+    runtime_seconds: 1000
     MAP: Town10
 
     env_settings:
@@ -649,9 +671,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_1234
             INFRASTRUCTURE_NAME: Intersection 1
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_1.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_1.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_1.txt
             SENSORS:
               sensor_id: lidar_1
               type: SemanticLidar
@@ -664,6 +690,7 @@ test_cases:
               z: 0.0
               yaw: 180.0
 
+
         - PROJECT_NAME: street_2
           COMPOSE_FILE: oci://docker.io/usdotfhwaops/v2xhub-application:develop
           COMPOSE_OVERRIDES: []
@@ -673,9 +700,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_5678
             INFRASTRUCTURE_NAME: Intersection 2
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_2.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_2.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_2.txt
             SENSORS:
               sensor_id: lidar_2
               type: SemanticLidar
@@ -697,9 +728,13 @@ test_cases:
             V2XHUB_VERSION: develop
             INFRASTRUCTURE_ID: rsu_9012
             INFRASTRUCTURE_NAME: Intersection 3
+            SAVE_STATE_FILE_PATH: /var/www/download/v2x_hub_state_intersection_3.sql.gz.enc
+            SAVE_STATE_PASS_PHRASE: cdasim
             INFRASTRUCTURE_RESOURCES:
               v2xhub_db_init: default.localhost.sql
+              v2xhub_save_state: v2x_hub_state_intersection_3.sql.gz.enc
               sensor: lidar_config_template.json
+              j2735_map: MAP_Intersection_3.txt
             SENSORS:
               sensor_id: lidar_3
               type: SemanticLidar
